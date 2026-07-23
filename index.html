@@ -849,6 +849,24 @@
                 updateUIForSelectedDate();
                 // данные обновятся через подписку
                 alert('✅ Вы записаны!');
+                // Показать все записи клиента с этим номером телефона
+                const clientApps = [];
+                Object.keys(appointments).forEach(dateKey => {
+                    const apps = appointments[dateKey];
+    apps.forEach(app => {
+        if (app.phone === phone) clientApps.push({ dateKey, ...app });
+    });
+});
+if (clientApps.length > 0) {
+    let msg = '📋 Все ваши записи:\n\n';
+    clientApps.forEach((app, i) => {
+        const d = new Date(app.dateKey);
+        const dateStr = d.toLocaleDateString('ru-RU', { day:'numeric', month:'long', weekday:'short' });
+        const [h] = app.time.split(':').map(Number);
+        msg += `${i+1}. ${dateStr} ${app.time}-${String(h+2).padStart(2,'0')}:00\n   Имя: ${app.name}\n\n`;
+    });
+    alert(msg);
+}
             } catch (error) {
                 alert('Ошибка записи: ' + error.message);
             }
