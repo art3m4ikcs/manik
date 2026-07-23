@@ -708,11 +708,14 @@
                 dayOffControl.innerHTML = isOff
                     ? '<button class="toggle-dayoff-btn" id="toggleDayOffBtn">Сделать рабочим</button>'
                     : '<button class="toggle-dayoff-btn" id="toggleDayOffBtn">Сделать выходным</button>';
-                document.getElementById('toggleDayOffBtn').addEventListener('click', () => {
-                    setDayOff(dateKey, !isOff).then(() => {
+                const toggleBtn = document.getElementById('toggleDayOffBtn');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', () => {
+                        setDayOff(dateKey, !isOff).then(() => {
                         // данные обновятся через подписку
+                        });
                     });
-                });
+                }
             } else {
                 dayOffControl.innerHTML = '';
             }
