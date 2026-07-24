@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="icon.png" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Маникюр Запись</title>
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCc0LDQvdC40LrRjtGAINCX0LDQv9C40YHRjCIsCiAgInNob3J0X25hbWUiOiAi0JzQsNC90LjQutGO0YAiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZWVmOCIsCiAgInRoZW1lX2NvbG9yIjogIiNlMzZiOGMiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJpY29uLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfQogIF0KfQ==">
@@ -12,24 +13,17 @@
         }
         body {
             background: linear-gradient(135deg, #ffeef8 0%, #ffd9e6 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
         }
-        /* Экран загрузки */
         .loader-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 238, 248, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(255,238,248,0.95); backdrop-filter: blur(10px);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999; transition: opacity 0.5s ease, visibility 0.5s ease;
         }
         .loader-container.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid rgba(227, 107, 140, 0.2);
+            width: 50px; height: 50px; border: 5px solid rgba(227,107,140,0.2);
             border-top: 5px solid #e36b8c; border-radius: 50%;
             animation: spin 1s linear infinite; margin-bottom: 20px;
         }
@@ -37,18 +31,17 @@
         .loader-text { color: #b3436e; font-weight: 600; font-size: 1.2rem; }
 
         .app-container {
-            width: 100%; max-width: 900px;
-            background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);
-            border-radius: 32px; box-shadow: 0 30px 50px rgba(200,90,120,0.2);
-            padding: 25px 20px; position: relative;
+            width: 100%; max-width: 900px; background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px); border-radius: 32px;
+            box-shadow: 0 30px 50px rgba(200,90,120,0.2); padding: 25px 20px;
             opacity: 0; transform: translateY(10px);
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
         .app-container.visible { opacity: 1; transform: translateY(0); }
 
         .auth-panel {
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            gap: 10px; margin-bottom: 20px;
         }
         .auth-status {
             background: #fff0f5; padding: 8px 16px; border-radius: 20px;
@@ -58,18 +51,17 @@
         .auth-btn {
             background: #e36b8c; border: none; color: white; font-weight: 600;
             padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
-            white-space: nowrap; transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(227,107,140,0.3);
+            white-space: nowrap; transition: all 0.2s ease; box-shadow: 0 4px 8px rgba(227,107,140,0.3);
         }
-        .auth-btn:hover { background: #c94b6e; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(227,107,140,0.4); }
-        .auth-btn:active { transform: scale(0.97); }
-
+        .auth-btn:hover { background: #c94b6e; transform: translateY(-1px); }
         h1 { font-size: 2rem; font-weight: 600; color: #b3436e; text-align: center; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #a05d7a; font-size: 0.95rem; margin-bottom: 20px; }
 
+        /* Страницы */
         .page { display: none; opacity: 0; transition: opacity 0.4s ease; }
         .page.active { display: block; opacity: 1; }
 
+        /* Панель мастера */
         .master-toolbar {
             display: none; background: #fff0f5; border-radius: 20px; padding: 10px 15px;
             margin-bottom: 15px; box-shadow: 0 6px 14px rgba(180,70,110,0.1);
@@ -104,7 +96,6 @@
             transition: all 0.2s ease;
         }
         .nav-btn:hover { background: #ffe0ea; transform: scale(1.05); }
-        .nav-btn:active { transform: scale(0.95); }
 
         .weekdays { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; font-weight: 600; color: #b3436e; margin-bottom: 8px; font-size: 0.9rem; }
         .days-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; margin-bottom: 20px; }
@@ -119,10 +110,10 @@
         @keyframes fadeInCell { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
         .day-cell:hover:not(.day-off) { background: #ffe0ea; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(227,107,140,0.15); }
         .day-cell.today { border: 2px solid #e36b8c; font-weight: 700; color: #b3436e; }
-        .day-cell.selected { background: #e36b8c; color: white; font-weight: 600; box-shadow: 0 8px 18px rgba(227,107,140,0.4); transform: scale(1.02); }
-        .day-cell.selected-multi { background: #f9c2d2; color: #5c2d43; font-weight: 600; box-shadow: 0 4px 8px rgba(227,107,140,0.3); border: 2px solid #e36b8c; }
+        .day-cell.selected { background: #e36b8c; color: white; font-weight: 600; box-shadow: 0 8px 18px rgba(227,107,140,0.4); }
+        .day-cell.selected-multi { background: #f9c2d2; color: #5c2d43; font-weight: 600; border: 2px solid #e36b8c; }
         .day-cell.other-month { color: #d4bcc7; background: #fdf4f8; cursor: default; pointer-events: none; opacity: 0.6; }
-        .day-cell.day-off { background: #f9eaf0; color: #b1949f; cursor: default; text-decoration: line-through; pointer-events: auto; }
+        .day-cell.day-off { background: #f9eaf0; color: #b1949f; cursor: default; text-decoration: line-through; }
         .day-cell.day-off::after { content: 'вых.'; position: absolute; bottom: 2px; font-size: 0.6rem; color: #b3436e; background: rgba(255,255,255,0.8); border-radius: 8px; padding: 0 3px; }
         .day-cell.has-appointments::before { content: ''; position: absolute; bottom: 4px; width: 6px; height: 6px; background: #e36b8c; border-radius: 50%; }
 
@@ -135,12 +126,11 @@
             transition: all 0.2s ease;
         }
         .time-slot small { display: block; font-size: 0.7rem; color: #9c5d7a; }
-        .time-slot:hover:not(.booked):not(.unavailable) { background: #ffe0ea; border-color: #e36b8c; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(227,107,140,0.2); }
-        .time-slot.selected-time { background: #e36b8c; border-color: #e36b8c; color: white; font-weight: 600; box-shadow: 0 6px 14px rgba(227,107,140,0.4); transform: scale(1.03); }
-        .time-slot.selected-time small { color: white; }
+        .time-slot:hover:not(.booked):not(.unavailable) { background: #ffe0ea; border-color: #e36b8c; transform: translateY(-2px); }
+        .time-slot.selected-time { background: #e36b8c; border-color: #e36b8c; color: white; font-weight: 600; }
         .time-slot.booked, .time-slot.unavailable { background: #f5f5f5; color: #b3a1a8; border-color: #e0d4d8; cursor: not-allowed; text-decoration: line-through; }
 
-        .past-message { color: #b3436e; font-weight: 500; margin: 10px 0; text-align: center; animation: fadeIn 0.4s ease; }
+        .past-message { color: #b3436e; font-weight: 500; margin: 10px 0; text-align: center; }
         .booking-form {
             display: flex; flex-direction: column; gap: 12px; margin-top: 15px;
             background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);
@@ -157,9 +147,7 @@
             color: white; font-weight: 600; font-size: 1rem; padding: 14px; border-radius: 30px;
             cursor: pointer; box-shadow: 0 8px 20px rgba(201,75,110,0.4); transition: all 0.2s ease;
         }
-        .book-btn:hover { background: linear-gradient(135deg, #d65f80, #b53d5c); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(201,75,110,0.5); }
-        .book-btn:active { transform: scale(0.97); }
-        .book-btn:disabled { background: #d4bcc7; box-shadow: none; cursor: not-allowed; transform: none; }
+        .book-btn:hover { background: linear-gradient(135deg, #d65f80, #b53d5c); transform: translateY(-1px); }
 
         .admin-bookings { margin-top: 25px; background: #fff0f5; border-radius: 20px; padding: 20px; animation: fadeIn 0.6s ease; }
         .admin-bookings h2 { font-size: 1.2rem; color: #b3436e; margin-bottom: 12px; }
@@ -168,15 +156,12 @@
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.03); animation: fadeIn 0.4s ease; transition: all 0.2s ease;
         }
-        .booking-item:hover { box-shadow: 0 6px 16px rgba(227,107,140,0.15); transform: translateY(-1px); }
         .delete-btn {
             background: #e74c3c !important; color: white !important; border: none !important;
             padding: 6px 14px; border-radius: 20px; font-weight: 600; cursor: pointer;
             transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(231,76,60,0.3);
         }
-        .delete-btn:hover { background: #c0392b !important; transform: scale(1.05); box-shadow: 0 6px 14px rgba(231,76,60,0.4); }
-        .delete-btn:active { transform: scale(0.95); }
-        .no-selection-message { color: #a07d8b; text-align: center; margin: 10px 0; font-style: italic; }
+        .delete-btn:hover { background: #c0392b !important; transform: scale(1.05); }
 
         /* Модальные окна */
         .modal {
@@ -208,15 +193,28 @@
         .btn-secondary:hover { background: #e0c0d0; }
 
         /* Архив */
-        .archive-container { display: flex; gap: 20px; height: 70vh; overflow: hidden; }
-        .years-sidebar { width: 100px; background: #fff0f5; border-radius: 20px; padding: 15px; overflow-y: auto; }
-        .years-sidebar button { display: block; width: 100%; background: white; border: none; margin-bottom: 8px; padding: 8px; border-radius: 12px; cursor: pointer; color: #b3436e; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .archive-container { display: flex; gap: 20px; min-height: 400px; }
+        .years-sidebar {
+            width: 100px; background: #fff0f5; border-radius: 20px; padding: 15px;
+            overflow-y: auto; flex-shrink: 0;
+        }
+        .years-sidebar button {
+            display: block; width: 100%; background: white; border: none; margin-bottom: 8px;
+            padding: 8px; border-radius: 12px; cursor: pointer; color: #b3436e;
+            font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
         .years-sidebar button.active { background: #e36b8c; color: white; }
-        .archive-content { flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; overflow-y: auto; padding: 5px; }
+        .archive-content {
+            flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px;
+            overflow-y: auto; padding: 5px; min-height: 200px;
+        }
         .archive-content .days-grid { grid-template-columns: repeat(7,1fr); gap: 8px; animation: fadeIn 0.5s ease; }
         .archive-content .day-cell { font-size: 1.2rem; padding: 10px; aspect-ratio: auto; height: 48px; }
         .archive-content .day-cell.has-appointments { background: #ffe0ea; font-weight: 600; }
-        .archive-detail { margin-top: 15px; background: #fff0f5; border-radius: 16px; padding: 15px; animation: fadeIn 0.5s ease; }
+        .archive-detail {
+            margin-top: 15px; background: #fff0f5; border-radius: 16px; padding: 15px;
+            animation: fadeIn 0.5s ease; width: 100%;
+        }
         .archive-detail h4 { color: #b3436e; margin-bottom: 8px; }
         .booking-info { background: white; border-radius: 12px; padding: 8px 12px; margin-bottom: 6px; }
         .back-btn {
@@ -227,14 +225,14 @@
         .back-btn:hover { background: #e36b8c; color: white; }
 
         @media (max-width: 600px) {
-            .archive-container { flex-direction: column; height: auto; }
-            .years-sidebar { width: 100%; display: flex; overflow-x: auto; gap: 8px; }
-            .years-sidebar button { flex-shrink: 0; }
+            .archive-container { flex-direction: column; min-height: 300px; }
+            .years-sidebar { width: 100%; display: flex; overflow-x: auto; gap: 8px; padding: 10px; }
+            .years-sidebar button { flex-shrink: 0; white-space: nowrap; }
+            .archive-content { min-height: 250px; }
         }
     </style>
 </head>
 <body>
-<!-- Экран загрузки -->
 <div class="loader-container" id="loader">
     <div class="spinner"></div>
     <div class="loader-text">Загрузка записей…</div>
@@ -242,23 +240,24 @@
 
 <div class="app-container" id="appContainer">
     <div class="auth-panel">
-        <span class="auth-status" id="authStatus">👤 Гость</span>
+        <span class="auth-status" id="authStatus"> Гость</span>
         <div class="auth-buttons">
             <button class="auth-btn" id="loginBtn">Войти как мастер</button>
-            <button class="auth-btn" id="myBookingsBtn">📋 Мои записи</button>
-            <button class="auth-btn" id="archiveBtn">📂 Архив</button>
-            <button class="auth-btn" id="searchWindowBtn">🔍 Поиск окна</button>
-            <button class="auth-btn" id="blacklistBtn" style="display:none;">🚫 ЧС</button>
+            <button class="auth-btn" id="myBookingsBtn"> Мои записи</button>
+            <button class="auth-btn" id="archiveBtn"> Архив</button>
+            <button class="auth-btn" id="searchWindowBtn"> Поиск окна</button>
+            <button class="auth-btn" id="blacklistBtn" style="display:none;">ЧС</button>
         </div>
     </div>
 
     <div id="mainPage" class="page active">
-        <h1>💅 Маникюр</h1>
-        <div class="subtitle">Запись на двухчасовые сеансы</div>
+        <h1>Manik</h1>
+        <div class="subtitle">Запись</div>
         <div class="master-toolbar" id="masterToolbar">
             <button class="toggle-dayoff-btn" id="toggleDayOffBtn" style="display:none;">Сделать выходным</button>
-            <button class="multi-select-btn" id="multiSelectBtn">✎ Выбрать несколько</button>
+            <button class="multi-select-btn" id="multiSelectBtn">Выбрать несколько</button>
             <button class="apply-multi-btn" id="applyMultiBtn" style="display:none;">Применить ко всем</button>
+            <button class="apply-multi-btn" id="applyMultiWorkBtn" style="display:none;">Сделать рабочими</button>
         </div>
         <div class="calendar-header">
             <button class="nav-btn" id="prevMonth">◀</button>
@@ -267,9 +266,9 @@
         </div>
         <div class="weekdays"><span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span></div>
         <div class="days-grid" id="daysGrid"></div>
-        <div class="selected-date-info" id="selectedDateDisplay"><span>📅 Дата не выбрана</span></div>
+        <div class="selected-date-info" id="selectedDateDisplay"><span> Дата не выбрана</span></div>
         <div id="timeSelectionArea" style="display:none;">
-            <div style="font-weight:600;color:#5c2d43;margin-bottom:5px;">Доступное время (2 часа):</div>
+            <div style="font-weight:600;color:#5c2d43;margin-bottom:5px;">Доступное время :</div>
             <div class="time-slots" id="timeSlotsContainer"></div>
         </div>
         <div id="bookingFormArea" style="display:none;" class="booking-form">
@@ -278,7 +277,7 @@
             <button class="book-btn" id="bookBtn">Записаться</button>
         </div>
         <div class="admin-bookings" id="adminBookings" style="display:none;">
-            <h2>📋 Все записи (мастер)</h2>
+            <h2> Все записи (мастер)</h2>
             <div id="bookingsContainer"></div>
         </div>
     </div>
@@ -344,8 +343,7 @@
         <label>Желаемое время (необязательно):</label>
         <select id="searchTime">
             <option value="">Любое</option><option value="08:00">08:00</option><option value="10:00">10:00</option>
-            <option value="12:00">12:00</option><option value="14:00">14:00</option>
-            <option value="16:00">16:00</option><option value="18:00">18:00</option>
+            <option value="12:00">12:00</option><option value="14:00">14:00</option><option value="16:00">16:00</option><option value="18:00">18:00</option>
         </select>
         <button class="book-btn" id="searchBtn">Найти</button>
         <div id="searchResults" style="margin-top:15px;max-height:200px;overflow-y:auto;"></div>
@@ -363,13 +361,12 @@
     </div>
 </div>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-    // ⚠️ ЗАМЕНИТЕ НА СВОИ КЛЮЧИ
+    // ⚠️ ВСТАВЬТЕ СВОИ КЛЮЧИ
     const firebaseConfig = {
         apiKey: "AIzaSyCetvGM77zUc_Llh5p-FLTF6PkvH-lCPQ8",
         authDomain: "manik-56a31.firebaseapp.com",
@@ -408,6 +405,7 @@
     const toggleDayOffBtn = document.getElementById('toggleDayOffBtn');
     const multiSelectBtn = document.getElementById('multiSelectBtn');
     const applyMultiBtn = document.getElementById('applyMultiBtn');
+    const applyMultiWorkBtn = document.getElementById('applyMultiWorkBtn');
     const timeSelectionArea = document.getElementById('timeSelectionArea');
     let timeSlotsContainer = document.getElementById('timeSlotsContainer');
     const bookingFormArea = document.getElementById('bookingFormArea');
@@ -440,7 +438,7 @@
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-    // Универсальные функции для модалок
+    // Универсальные функции
     function showMessage(text) {
         document.getElementById('messageText').textContent = text;
         messageModal.classList.add('active');
@@ -474,7 +472,7 @@
             const doc = await db.collection('settings').doc('master').get();
             if (doc.exists) masterEmail = doc.data().email;
             else console.warn('Документ settings/master не найден');
-        } catch (e) { console.error('Ошибка загрузки masterEmail:', e); }
+        } catch (e) { console.error(e); }
     }
 
     // Аутентификация
@@ -609,14 +607,8 @@
     function setDayOff(dateKey, isOff) {
         return isOff ? db.collection('daysOff').doc(dateKey).set({}) : db.collection('daysOff').doc(dateKey).delete();
     }
-    function addToBlacklist(phone) {
-        if (!isAdmin) return;
-        db.collection('blacklist').doc(phone).set({});
-    }
-    function removeFromBlacklist(phone) {
-        if (!isAdmin) return;
-        db.collection('blacklist').doc(phone).delete();
-    }
+    function addToBlacklist(phone) { if (!isAdmin) return; db.collection('blacklist').doc(phone).set({}); }
+    function removeFromBlacklist(phone) { if (!isAdmin) return; db.collection('blacklist').doc(phone).delete(); }
 
     function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
     function isToday(d) { const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
@@ -675,11 +667,14 @@
     function updateMasterToolbar() {
         if (!isAdmin) { masterToolbar.classList.remove('visible'); return; }
         masterToolbar.classList.add('visible');
-        if (selectedDate && !multiSelectMode) {
-            toggleDayOffBtn.style.display='inline-block';
-            toggleDayOffBtn.textContent = isDayOff(formatDateKey(selectedDate)) ? 'Сделать рабочим' : 'Сделать выходным';
-        } else toggleDayOffBtn.style.display='none';
-        multiSelectBtn.textContent = multiSelectMode ? 'Завершить выбор' : '✎ Выбрать несколько';
+        if (multiSelectMode && selectedDaysSet.size > 0) {
+            applyMultiBtn.style.display = 'inline-block';
+            applyMultiWorkBtn.style.display = 'inline-block';
+        } else {
+            applyMultiBtn.style.display = 'none';
+            applyMultiWorkBtn.style.display = 'none';
+        }
+        multiSelectBtn.textContent = multiSelectMode ? 'Завершить выбор' : ' Выбрать несколько';
         applyMultiBtn.style.display = (multiSelectMode && selectedDaysSet.size>0) ? 'inline-block' : 'none';
     }
 
@@ -699,6 +694,16 @@
         selectedDaysSet.clear(); multiSelectMode = false;
         renderCalendar(); updateMasterToolbar(); updateUIForSelectedDate();
     });
+    applyMultiWorkBtn.addEventListener ('click', () => {
+        selectedDaysSet.forEach(dk => {
+            if (isDayOff(dk)) setDayOff(dk, false);
+        });
+        selectedDaysSet.clear();
+        multiSelectMode = false;
+        renderCalendar();
+        updateMasterToolbar();
+        updateUIForSelectedDate();
+    });
 
     function updateUIForSelectedDate() {
         if (!selectedDate || multiSelectMode) {
@@ -708,7 +713,7 @@
         }
         const dk = formatDateKey(selectedDate);
         selectedDateDisplay.innerHTML=`<span> ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}</span>`;
-        timeSelectionArea.innerHTML = `<div style="font-weight:600;color:#5c2d43;margin-bottom:5px;">Доступное время:</div><div class="time-slots" id="timeSlotsContainer"></div>`;
+        timeSelectionArea.innerHTML = `<div style="font-weight:600;color:#5c2d43;margin-bottom:5px;">Доступное время (2 часа):</div><div class="time-slots" id="timeSlotsContainer"></div>`;
         timeSlotsContainer = document.getElementById('timeSlotsContainer');
         timeSelectionArea.style.display='block';
         if (isDateInPast(selectedDate)) {
@@ -781,57 +786,81 @@
         });
     }
 
-    // Архив
+    // ========== АРХИВ (исправлено) ==========
     function showArchive() {
         mainPage.classList.remove('active');
         archivePage.classList.add('active');
+        // Очищаем перед заполнением
+        yearsSidebar.innerHTML = '';
+        archiveContent.innerHTML = '';
         buildYearsList();
     }
     archiveBtn.addEventListener('click', showArchive);
     backFromArchive.addEventListener('click', () => {
         archivePage.classList.remove('active');
         mainPage.classList.add('active');
+        selectedArchiveYear = null;
+        selectedArchiveMonth = null;
     });
 
     function buildYearsList() {
         const years = new Set();
         Object.keys(appointments).forEach(dk => years.add(dk.split('-')[0]));
-        if (years.size === 0) { yearsSidebar.innerHTML = '<small>Нет записей</small>'; archiveContent.innerHTML = ''; return; }
+        yearsSidebar.innerHTML = '';
+        if (years.size === 0) {
+            yearsSidebar.innerHTML = '<small style="color:#b3436e;">Нет записей</small>';
+            archiveContent.innerHTML = '<div class="no-selection-message" style="width:100%; text-align:center;">Нет данных для отображения</div>';
+            return;
+        }
         const sorted = Array.from(years).sort((a,b)=>b-a);
-        yearsSidebar.innerHTML = sorted.map(y => `<button data-year="${y}">${y}</button>`).join('');
-        yearsSidebar.querySelectorAll('button').forEach(btn => {
+        sorted.forEach(y => {
+            const btn = document.createElement('button');
+            btn.textContent = y;
+            btn.dataset.year = y;
             btn.addEventListener('click', function() {
                 selectedArchiveYear = this.dataset.year;
                 selectedArchiveMonth = null;
-                buildMonthsList(selectedArchiveYear);
+                // убираем активный класс со всех кнопок годов
                 yearsSidebar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
+                buildMonthsList(selectedArchiveYear);
             });
+            yearsSidebar.appendChild(btn);
         });
+        // автоматически выбираем первый год
         if (sorted.length) yearsSidebar.querySelector('button').click();
     }
 
     function buildMonthsList(year) {
+        archiveContent.innerHTML = ''; // очищаем
         const monthsWithApps = new Set();
         Object.keys(appointments).forEach(dk => {
             const [y,m] = dk.split('-');
             if (y === year) monthsWithApps.add(parseInt(m));
         });
         const allMonths = Array.from({length:12}, (_,i)=>i+1);
-        archiveContent.innerHTML = allMonths.map(m => {
+        allMonths.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'month-card';
+            card.dataset.month = m;
             const has = monthsWithApps.has(m);
-            return `<div class="month-card" data-month="${m}">${monthNames[m-1]}<br><small>${has ? 'есть записи' : 'нет записей'}</small></div>`;
-        }).join('');
-        archiveContent.querySelectorAll('.month-card').forEach(card => {
-            card.addEventListener('click', function() {
-                selectedArchiveMonth = parseInt(this.dataset.month);
-                showCalendarForMonth(selectedArchiveYear, selectedArchiveMonth);
+            card.innerHTML = `${monthNames[m-1]}<br><small>${has ? 'есть записи' : 'нет записей'}</small>`;
+            card.addEventListener('click', () => {
+                selectedArchiveMonth = m;
+                showCalendarForMonth(year, m);
             });
+            archiveContent.appendChild(card);
         });
     }
 
     function showCalendarForMonth(year, month) {
-        archiveContent.innerHTML = `<button class="back-btn" id="backToMonths">← К месяцам</button>`;
+        archiveContent.innerHTML = ''; // очищаем
+        const backBtn = document.createElement('button');
+        backBtn.className = 'back-btn';
+        backBtn.textContent = '← К месяцам';
+        backBtn.addEventListener('click', () => buildMonthsList(year));
+        archiveContent.appendChild(backBtn);
+
         const calDiv = document.createElement('div');
         calDiv.className = 'days-grid';
         const firstDay = new Date(year, month-1, 1).getDay();
@@ -848,11 +877,13 @@
         }
         calDiv.innerHTML = html;
         archiveContent.appendChild(calDiv);
+
         const detailDiv = document.createElement('div');
         detailDiv.className = 'archive-detail';
         detailDiv.id = 'archiveDayDetail';
         detailDiv.style.display = 'none';
         archiveContent.appendChild(detailDiv);
+
         calDiv.querySelectorAll('.day-cell[data-date]').forEach(cell => {
             cell.addEventListener('click', function() {
                 const dk = this.dataset.date;
@@ -874,12 +905,11 @@
                 }
             });
         });
-        document.getElementById('backToMonths').addEventListener('click', ()=>buildMonthsList(year));
     }
 
-    // Поиск окна
+    // ========== ПОИСК ОКНА ==========
     searchWindowBtn.addEventListener('click', () => searchModal.classList.add('active'));
-    searchBtn.addEventListener('click', () => {
+    document.getElementById('searchBtn').addEventListener('click', () => {
         const startDate = document.getElementById('searchStartDate').valueAsDate || new Date();
         const endDate = document.getElementById('searchEndDate').valueAsDate || new Date(startDate.getFullYear(), startDate.getMonth()+2, 0);
         const desiredTime = document.getElementById('searchTime').value;
@@ -911,7 +941,7 @@
         }
     });
 
-    // Чёрный список
+    // ========== ЧЁРНЫЙ СПИСОК ==========
     blacklistBtn.addEventListener('click', () => { blacklistModal.classList.add('active'); renderBlacklist(); });
     document.getElementById('addBlacklistBtn').addEventListener('click', () => {
         const phone = document.getElementById('newBlacklistPhone').value.trim();
@@ -930,7 +960,7 @@
         });
     }
 
-    // Уведомления
+    // ========== УВЕДОМЛЕНИЯ ==========
     if ('Notification' in window) Notification.requestPermission();
     function checkUpcomingAppointments() {
         if (Notification.permission !== 'granted') return;
@@ -946,7 +976,7 @@
                     const id = `${dateKey}_${app.time}`;
                     if (!notified.includes(id)) {
                         const daysLeft = Math.ceil((appointmentDate - now) / (1000*60*60*24));
-                        new Notification('💅 Маникюр', {
+                        new Notification('Manik', {
                             body: `${app.name}, у вас запись ${app.time} через ${daysLeft} дн. (${appointmentDate.toLocaleDateString()})`,
                             icon: 'icon.png'
                         });
@@ -971,7 +1001,6 @@
     }
 
     subscribeToUpdates();
-    // Первая загрузка запустится в onAuthStateChanged
 </script>
 
 <script>
