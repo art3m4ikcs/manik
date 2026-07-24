@@ -632,7 +632,36 @@
     function getBookedSlotsForDate(d) { const k=formatDateKey(d); return appointments[k] ? appointments[k].map(a=>a.time) : []; }
     function isPastSlot(d,time) { if(!isToday(d)) return false; const [h,m]=time.split(':').map(Number); const end=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h+2,m); return end <= new Date(); }
     function isDateInPast(d) { const tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1); tomorrow.setHours(0,0,0,0); return new Date(d.getFullYear(),d.getMonth(),d.getDate()) < tomorrow; }
+    function isValidPhone(phone) {
+    // Убираем все нецифровые символы
+    const cleaned = phone.replace(/\D/g, '');
+    // Проверяем, что осталось ровно 11 цифр (Россия)
+    return /^\d{11}$/.test(cleaned);
+}
 
+function hasAppointmentWithinWeek(phone) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    const weekLater = new Date(tomorrow);
+    weekLater.setDate(weekLater.getDate() + 7);
+
+    let found = null;
+    Object.keys(appointments).forEach(dateKey => {
+        const [y, m, d] = dateKey.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        if (date >= tomorrow && date <= weekLater) {
+            const apps = appointments[dateKey];
+            apps.forEach(app => {
+                if (app.phone === phone) {
+                    found = { dateKey, ...app };
+                }
+            });
+        }
+    });
+    return found;
+}
     function renderAll() {
         renderCalendar();
         updateMasterToolbar();
@@ -758,19 +787,82 @@
     }
 
     bookBtn.addEventListener('click', async () => {
-        if (!selectedDate || !selectedTime) return;
-        const dk = formatDateKey(selectedDate);
-        if (isDateInPast(selectedDate)) { showMessage('Нельзя записаться на прошедший день.'); return; }
-        if (isDayOff(dk)) { showMessage('Выходной.'); return; }
-        const name = clientNameInput.value.trim(), phone = clientPhoneInput.value.trim();
-        if (!name || !phone) { showMessage('Введите имя и телефон.'); return; }
-        if (blacklist.includes(phone)) { showMessage('Простите, для Вас запись недоступна.'); return; }
-        try {
-            await addAppointment(dk, selectedTime, name, phone);
-            clientNameInput.value=''; clientPhoneInput.value=''; selectedTime=null;
-            updateUIForSelectedDate(); showMessage('Вы записаны!');
-        } catch(e) { showMessage('Ошибка: '+e.message); }
-    });
+    // Проверяем, выбраны ли дата и время
+    if (!selectedDate || !selectedTime) return;
+
+    const dk = formatDateKey(selectedDate);
+
+    // Нельзя записаться на прошедший день
+    if (isDateInPast(selectedDate)) {
+        showMessage('Нельзя записаться на прошедший день.');
+        return;
+    }
+
+    // Нельзя записаться в выходной день
+    if (isDayOff(dk)) {
+        showMessage('Выходной день. Запись невозможна.');
+        return;
+    }
+
+    // Получаем и очищаем данные
+    const name = clientNameInput.value.trim();
+    const phoneRaw = clientPhoneInput.value.trim();
+    const phone = phoneRaw.replace(/\D/g, ''); // только цифры
+
+    // Проверка на заполнение полей
+    if (!name || !phoneRaw) {
+        showMessage('Пожалуйста, введите имя и номер телефона.');
+        return;
+    }
+
+    // Проверка формата телефона (ровно 11 цифр)
+    if (!isValidPhone(phoneRaw)) {
+        showMessage('Введите корректный номер телефона (11 цифр, например 79161234567).');
+        return;
+    }
+
+    // Проверка на блокировку номера
+    if (blacklist.includes(phone)) {
+        showMessage('Этот номер телефона заблокирован. Запись невозможна.');
+        return;
+    }
+
+    // Проверка на повторную запись в течение 7 дней
+    const existing = hasAppointmentWithinWeek(phone);
+    if (existing) {
+        const d = new Date(existing.dateKey);
+        const dateStr = d.toLocaleDateString('ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            weekday: 'short'
+        });
+        const endTime = `${parseInt(existing.time) + 2}:00`;
+        showMessage(
+            `Вы уже записаны на ${dateStr} в ${existing.time}-${endTime}. ` +
+            `Повторная запись в течение недели невозможна.`
+        );
+        return;
+    }
+
+    try {
+        // Добавляем запись в Firestore
+        await addAppointment(dk, selectedTime, name, phone);
+
+        // Очищаем форму
+        clientNameInput.value = '';
+        clientPhoneInput.value = '';
+        selectedTime = null;
+
+        // Обновляем интерфейс
+        updateUIForSelectedDate();
+
+        // Показываем успешное сообщение
+        showMessage('Вы успешно записаны!');
+
+    } catch (error) {
+        showMessage('Ошибка при записи: ' + error.message);
+    }
+});
 
     function renderAdminBookings() {
         if (!isAdmin) { adminBookings.style.display='none'; return; }
