@@ -700,7 +700,7 @@
         }
         try {
             await db.collection('appointments').doc(`${dk}_${selectedTime}`).set({
-                time: selectedTime, name, phone, note, designUrl, userId: currentUser?.uid || 'anon'
+                time: selectedTime, name, phone, note, designUrl, userId: currentUser?.uid || 'unknown'
             });
             clientNameInput.value = ''; clientPhoneInput.value = ''; clientNoteInput.value = '';
             designFileInput.value = ''; selectedTime = null;
@@ -722,7 +722,7 @@
         return null;
     }
 
-    // ---------- ИИ ЧАТ (заглушка) ----------
+    // ---------- ИИ ЧАТ (БЕЗ КЛЮЧА В КОДЕ) ----------
     aiChatBtn.addEventListener('click', () => aiChatModal.classList.add('active'));
     document.getElementById('closeAiChatBtn').addEventListener('click', () => aiChatModal.classList.remove('active'));
     document.getElementById('sendChatBtn').addEventListener('click', sendChat);
@@ -733,10 +733,11 @@
         if (!msg) return;
         addChatMessage('user', msg);
         chatInput.value = '';
-        // Заглушка (без OpenAI ключа)
-        setTimeout(() => {
-            addChatMessage('bot', 'Попробуйте нежно-розовый френч с блестками! ✨');
-        }, 500);
+
+        const askAI = firebase.functions().httpsCallable('askAI');
+        askAI({ message: msg })
+            .then(result => addChatMessage('bot', result.data.reply))
+            .catch(error => addChatMessage('bot', 'Ошибка: ' + error.message));
     }
 
     function addChatMessage(type, text) {
@@ -747,7 +748,7 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ---------- АРХИВ ----------
+    // ---------- АРХИВ (МОДАЛЬНОЕ ОКНО) ----------
     const archiveModal = document.createElement('div');
     archiveModal.className = 'modal';
     archiveModal.id = 'archiveModal';
@@ -768,7 +769,6 @@
     document.body.appendChild(archiveModal);
 
     let filteredAppointments = {};
-    let archivePhone = null;
 
     function openArchive(phone = null) {
         if (phone) {
@@ -778,10 +778,8 @@
                 const filtered = apps.filter(a => a.phone === cleaned);
                 if (filtered.length) filteredAppointments[dk] = filtered;
             });
-            archivePhone = cleaned;
         } else {
             filteredAppointments = {...appointments};
-            archivePhone = null;
         }
         buildArchiveYears();
         document.getElementById('archiveModal').classList.add('active');
@@ -865,6 +863,7 @@
             });
         });
     }
+
     archiveBtn.addEventListener('click', () => {
         if (isAdmin) {
             openArchive();
@@ -927,7 +926,7 @@
         modal.querySelector('#closeSearch').addEventListener('click', ()=> modal.remove());
     });
 
-    // ---------- ЧЁРНЫЙ СПИСОК (МАСТЕР) ----------
+    // ---------- ЧЁРНЫЙ СПИСОК ----------
     blacklistBtn.addEventListener('click', ()=>{
         blacklistModal.classList.add('active');
         renderBlacklist();
@@ -957,7 +956,7 @@
         blacklist = snap.docs.map(d => d.id);
     });
 
-    // ---------- АДМИН-ПАНЕЛЬ (УДАЛЕНИЕ ЗАПИСЕЙ) ----------
+    // ---------- АДМИН-ПАНЕЛЬ ----------
     function renderAdminBookings() {
         if (!isAdmin) { adminBookings.style.display = 'none'; return; }
         adminBookings.style.display = 'block';
@@ -1009,7 +1008,7 @@
     }
     subscribeToUpdates();
 
-    // ---------- НАВИГАЦИЯ ПО МЕСЯЦАМ ----------
+    // ---------- НАВИГАЦИЯ ----------
     document.getElementById('prevMonth').addEventListener('click', ()=>{
         currentMonth--;
         if (currentMonth<0) { currentMonth=11; currentYear--; }
@@ -1022,6 +1021,10 @@
         selectedDate = null; selectedTime = null;
         renderAll();
     });
+
+    // ---------- ЗАВЕРШЕНИЕ ----------
+    // Функция updateUIForRole уже определена выше (она просто вызывает renderAdminBookings и обновляет видимость)
+    // Всё готово!
 </script>
 </body>
 </html>
