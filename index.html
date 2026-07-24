@@ -11,7 +11,7 @@
             margin: 0; padding: 0; box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        body {
+        body {-
             background: linear-gradient(135deg, #ffeef8 0%, #ffd9e6 100%);
             min-height: 100vh;
             display: flex;
@@ -764,7 +764,7 @@
         if (isDayOff(dk)) { showMessage('Выходной.'); return; }
         const name = clientNameInput.value.trim(), phone = clientPhoneInput.value.trim();
         if (!name || !phone) { showMessage('Введите имя и телефон.'); return; }
-        if (blacklist.includes(phone)) { showMessage('Этот номер заблокирован.'); return; }
+        if (blacklist.includes(phone)) { showMessage('Простите, для Вас запись недоступна.'); return; }
         try {
             await addAppointment(dk, selectedTime, name, phone);
             clientNameInput.value=''; clientPhoneInput.value=''; selectedTime=null;
