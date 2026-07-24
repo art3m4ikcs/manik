@@ -424,6 +424,16 @@
     const chatInput = document.getElementById('chatInput');
     const forgotPasswordModal = document.getElementById('forgotPasswordModal');
 
+    // Обработчик для ссылки "Забыли пароль?" – вешаем сразу после загрузки DOM
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const modal = document.getElementById('forgotPasswordModal');
+            if (modal) modal.classList.add('active');
+        });
+    }
+
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
     menuBtn.addEventListener('click', (e) => { e.stopPropagation(); dropdownMenu.classList.toggle('show'); });
