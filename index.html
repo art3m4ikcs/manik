@@ -278,17 +278,27 @@
 
     <!-- Модальное окно поиска свободного слота -->
     <div class="modal" id="searchModal">
-        <div class="modal-content">
-            <h3 style="color:#b3436e;">Поиск свободного окна</h3>
-            <label>С какой даты искать:</label>
-            <input type="date" id="searchStartDate">
-            <label>До какой даты (необязательно):</label>
-            <input type="date" id="searchEndDate">
-            <button class="book-btn" id="searchBtn">Найти</button>
-            <div id="searchResults" style="margin-top:15px;max-height:200px;overflow-y:auto;"></div>
-            <button class="auth-btn" style="margin-top:10px;" id="closeSearchModal">Закрыть</button>
+    <div class="modal-content">
+        <h3 style="color:#b3436e;">Поиск свободного окна</h3>
+        <button class="auth-btn" id="searchFromTodayBtn" style="margin-bottom:10px;"> Искать от сегодня</button>
+        <label>С какой даты:</label>
+        <input type="date" id="searchStartDate">
+        <label>До какой даты (необязательно):</label>
+        <input type="date" id="searchEndDate">
+        <label>Какое время искать (выберите нужные слоты):</label>
+        <div class="time-slots" id="searchTimeSlots">
+            <button class="time-slot" data-time="08:00">8:00-10:00</button>
+            <button class="time-slot" data-time="10:00">10:00-12:00</button>
+            <button class="time-slot" data-time="12:00">12:00-14:00</button>
+            <button class="time-slot" data-time="14:00">14:00-16:00</button>
+            <button class="time-slot" data-time="16:00">16:00-18:00</button>
+            <button class="time-slot" data-time="18:00">18:00-20:00</button>
         </div>
+        <button class="book-btn" id="searchBtn">Найти</button>
+        <div id="searchResults" style="margin-top:15px;max-height:200px;overflow-y:auto;"></div>
+        <button class="auth-btn" style="margin-top:10px;" id="closeSearchModal">Закрыть</button>
     </div>
+</div>
 </div>
 
 <!-- Firebase SDK -->
@@ -722,45 +732,92 @@
 }
 
     // ===== ПОИСК ОКНА =====
-    const searchWindowBtn = document.getElementById('searchWindowBtn');
-    const searchModal = document.getElementById('searchModal');
-    const closeSearchModal = document.getElementById('closeSearchModal');
-    const searchBtn = document.getElementById('searchBtn');
-    const searchResults = document.getElementById('searchResults');
+    // ===== ПОИСК ОКНА =====
+const searchWindowBtn = document.getElementById('searchWindowBtn');
+const searchModal = document.getElementById('searchModal');
+const closeSearchModal = document.getElementById('closeSearchModal');
+const searchBtn = document.getElementById('searchBtn');
+const searchResults = document.getElementById('searchResults');
+const searchStartDate = document.getElementById('searchStartDate');
+const searchEndDate = document.getElementById('searchEndDate');
+const searchFromTodayBtn = document.getElementById('searchFromTodayBtn');
 
-    searchWindowBtn.addEventListener('click', () => searchModal.classList.add('active'));
-    closeSearchModal.addEventListener('click', () => searchModal.classList.remove('active'));
+// Работа с выбором слотов в модалке
+const searchTimeSlotsContainer = document.getElementById('searchTimeSlots');
+let selectedSearchSlots = new Set(allTimeSlots); // по умолчанию выбраны все
 
-    searchBtn.addEventListener('click', () => {
-        const start = document.getElementById('searchStartDate').value;
-        const end = document.getElementById('searchEndDate').value;
-        if (!start) { alert('Выберите начальную дату'); return; }
-        const startDate = new Date(start);
-        const endDate = end ? new Date(end) : null;
-        const results = [];
-        const current = new Date(startDate);
-        while (current <= (endDate || new Date(current.getFullYear(), current.getMonth()+1, 0))) {
-            if (isDateInPast(current)) { current.setDate(current.getDate()+1); continue; }
-            const dk = formatDateKey(current);
-            if (!isDayOff(dk)) {
-                const booked = getBookedSlotsForDate(current);
-                allTimeSlots.forEach(time => {
-                    if (!booked.includes(time) && !isPastSlot(current, time)) {
-                        results.push({ date: new Date(current), time });
-                    }
-                });
-            }
-            current.setDate(current.getDate()+1);
-        }
-        if (results.length === 0) {
-            searchResults.innerHTML = '<p style="color:#b3436e;">Нет свободных окон в выбранном диапазоне.</p>';
+// Инициализация: все слоты выделены
+searchTimeSlotsContainer.querySelectorAll('.time-slot').forEach(slot => {
+    slot.classList.add('selected-time'); // стиль выделения
+    slot.addEventListener('click', () => {
+        const time = slot.dataset.time;
+        if (selectedSearchSlots.has(time)) {
+            selectedSearchSlots.delete(time);
+            slot.classList.remove('selected-time');
         } else {
-            searchResults.innerHTML = results.map(r => {
-                const d = r.date.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
-                return `<div style="margin-bottom:6px;background:#fff0f5;padding:6px 12px;border-radius:12px;">${d} ${r.time}-${parseInt(r.time)+2}:00</div>`;
-            }).join('');
+            selectedSearchSlots.add(time);
+            slot.classList.add('selected-time');
         }
     });
+});
+
+// Установить начальную дату на завтра
+searchFromTodayBtn.addEventListener('click', () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    searchStartDate.value = tomorrow.toISOString().split('T')[0];
+    searchEndDate.value = ''; // сброс конечной даты
+});
+
+searchWindowBtn.addEventListener('click', () => searchModal.classList.add('active'));
+closeSearchModal.addEventListener('click', () => searchModal.classList.remove('active'));
+
+searchBtn.addEventListener('click', () => {
+    const start = searchStartDate.value;
+    const end = searchEndDate.value;
+    if (!start) { alert('Выберите начальную дату'); return; }
+    if (selectedSearchSlots.size === 0) { alert('Выберите хотя бы один слот времени'); return; }
+
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : null;
+    const results = [];
+    const current = new Date(startDate);
+
+    // Ограничим поиск одним годом вперёд, если конечная дата не задана
+    const maxDate = endDate || new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
+
+    while (current <= maxDate) {
+        if (isDateInPast(current)) { current.setDate(current.getDate()+1); continue; }
+        const dk = formatDateKey(current);
+        if (!isDayOff(dk)) {
+            const booked = getBookedSlotsForDate(current);
+            // Перебираем только выбранные слоты
+            selectedSearchSlots.forEach(time => {
+                if (!booked.includes(time) && !isPastSlot(current, time)) {
+                    results.push({ date: new Date(current), time });
+                }
+            });
+        }
+        current.setDate(current.getDate() + 1);
+        // Предотвращаем бесконечный цикл, если конечная дата не задана и прошло больше года
+        if (!endDate && current > maxDate) break;
+    }
+
+    if (results.length === 0) {
+        searchResults.innerHTML = '<p style="color:#b3436e;">Нет свободных окон в выбранном диапазоне.</p>';
+    } else {
+        // Ограничим вывод первыми 50 результатами для производительности
+        const displayResults = results.slice(0, 50);
+        searchResults.innerHTML = displayResults.map(r => {
+            const d = r.date.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
+            const endTime = `${parseInt(r.time)+2}:00`;
+            return `<div class="booking-info" style="margin-bottom:6px;">${d} ${r.time}-${endTime}</div>`;
+        }).join('');
+        if (results.length > 50) {
+            searchResults.innerHTML += '<p style="color:#b3436e; margin-top:8px;">Показаны первые 50 результатов. Уточните диапазон для более точного поиска.</p>';
+        }
+    }
+});
 
     // Инициализация
     subscribeToUpdates();
