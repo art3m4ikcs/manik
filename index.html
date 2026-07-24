@@ -841,77 +841,77 @@
 
         // ---------- ОБНОВЛЕНИЕ ВЫБРАННОЙ ДАТЫ ----------
         function updateUIForSelectedDate() {
-            // Восстанавливаем стандартную структуру блока выбора времени
-            timeSelectionArea.innerHTML = `
-            <div style="font-weight: 600; color: #5c2d43; margin-bottom: 5px;">Доступное время (2 часа):</div>
-            <div class="time-slots" id="timeSlotsContainer"></div>
-            `;
-            timeSlotsContainer = document.getElementById('timeSlotsContainer');
-            timeSelectionArea.style.display = 'block';
+    if (!selectedDate || multiSelectMode) {
+        selectedDateDisplay.innerHTML = '<span>📅 Дата не выбрана</span>';
+        timeSelectionArea.style.display = 'none';
+        bookingFormArea.style.display = 'none';
+        return;
+    }
 
-            if (isDateInPast(selectedDate)) {
-                timeSelectionArea.innerHTML = '<div class="past-message">⛔ Запись возможна только начиная с завтрашнего дня</div>';
-                bookingFormArea.style.display = 'none';
-                return;
-            }
+    const dateKey = formatDateKey(selectedDate);
+    const options = { weekday: 'long', day: 'numeric', month: 'long' };
+    const formatted = selectedDate.toLocaleDateString('ru-RU', options);
+    selectedDateDisplay.innerHTML = `<span>📅 ${formatted}</span>`;
 
-            const dateKey = formatDateKey(selectedDate);
-            const options = { weekday: 'long', day: 'numeric', month: 'long' };
-            const formatted = selectedDate.toLocaleDateString('ru-RU', options);
-            selectedDateDisplay.innerHTML = `<span>📅 ${formatted}</span>`;
+    // ВСЕГДА восстанавливаем стандартную структуру timeSelectionArea
+    timeSelectionArea.innerHTML = `
+        <div style="font-weight: 600; color: #5c2d43; margin-bottom: 5px;">Доступное время (2 часа):</div>
+        <div class="time-slots" id="timeSlotsContainer"></div>
+    `;
+    timeSlotsContainer = document.getElementById('timeSlotsContainer');
+    timeSelectionArea.style.display = 'block';
 
-            // Проверка на прошлое (нельзя записаться на сегодня и раньше)
-            if (isDateInPast(selectedDate)) {
-                timeSelectionArea.innerHTML = '<div class="past-message">⛔ Запись возможна только начиная с завтрашнего дня</div>';
-                timeSelectionArea.style.display = 'block';
-                bookingFormArea.style.display = 'none';
-                return;
-            }
+    // Проверка на прошлое
+    if (isDateInPast(selectedDate)) {
+        timeSelectionArea.innerHTML = '<div class="past-message">⛔ Запись возможна только начиная с завтрашнего дня</div>';
+        bookingFormArea.style.display = 'none';
+        return;
+    }
 
-            const isOff = isDayOff(dateKey);
-            if (isOff) {
-                timeSelectionArea.style.display = 'none';
-                bookingFormArea.style.display = 'none';
-                return;
-            }
+    const isOff = isDayOff(dateKey);
+    if (isOff) {
+        timeSelectionArea.style.display = 'none';
+        bookingFormArea.style.display = 'none';
+        return;
+    }
 
-            const bookedSlots = getBookedSlotsForDate(selectedDate);
-            let slotsHtml = '';
-            allTimeSlots.forEach(time => {
-                const [h, m] = time.split(':').map(Number);
-                const endTime = `${String(h+2).padStart(2,'0')}:${m}`;
-                const isBooked = bookedSlots.includes(time);
-                const past = isPastSlot(selectedDate, time);
-                let slotClass = 'time-slot';
-                if (isBooked) slotClass += ' booked';
-                else if (past) slotClass += ' unavailable';
-                if (selectedTime === time && !isBooked && !past) slotClass += ' selected-time';
-                slotsHtml += `<div class="${slotClass}" data-time="${time}">${time}<small>до ${endTime}</small></div>`;
-            });
+    const bookedSlots = getBookedSlotsForDate(selectedDate);
+    let slotsHtml = '';
+    allTimeSlots.forEach(time => {
+        const [h, m] = time.split(':').map(Number);
+        const endTime = `${String(h+2).padStart(2,'0')}:${m}`;
+        const isBooked = bookedSlots.includes(time);
+        const past = isPastSlot(selectedDate, time);
+        let slotClass = 'time-slot';
+        if (isBooked) slotClass += ' booked';
+        else if (past) slotClass += ' unavailable';
+        if (selectedTime === time && !isBooked && !past) slotClass += ' selected-time';
+        slotsHtml += `<div class="${slotClass}" data-time="${time}">${time}<small>до ${endTime}</small></div>`;
+    });
 
-            timeSlotsContainer.innerHTML = slotsHtml;
-            timeSelectionArea.style.display = 'block';
+    timeSlotsContainer.innerHTML = slotsHtml;
+    timeSelectionArea.style.display = 'block';
 
-            if (selectedTime && (bookedSlots.includes(selectedTime) || isPastSlot(selectedDate, selectedTime))) {
-                selectedTime = null;
-            }
-            bookingFormArea.style.display = selectedTime ? 'flex' : 'none';
+    if (selectedTime && (bookedSlots.includes(selectedTime) || isPastSlot(selectedDate, selectedTime))) {
+        selectedTime = null;
+    }
+    bookingFormArea.style.display = selectedTime ? 'flex' : 'none';
 
-            document.querySelectorAll('.time-slot:not(.booked):not(.unavailable)').forEach(slot => {
-                if (slot) {
-                    slot.addEventListener('click', function() {
-                        const time = this.dataset.time;
-                        const currentBooked = getBookedSlotsForDate(selectedDate);
-                        if (currentBooked.includes(time) || isPastSlot(selectedDate, time)) {
-                            updateUIForSelectedDate();
-                            return;
-                        }
-                        selectedTime = time;
-                        updateUIForSelectedDate();
-                    });
+    document.querySelectorAll('.time-slot:not(.booked):not(.unavailable)').forEach(slot => {
+        if (slot) {
+            slot.addEventListener('click', function() {
+                const time = this.dataset.time;
+                const currentBooked = getBookedSlotsForDate(selectedDate);
+                if (currentBooked.includes(time) || isPastSlot(selectedDate, time)) {
+                    updateUIForSelectedDate();
+                    return;
                 }
+                selectedTime = time;
+                updateUIForSelectedDate();
             });
         }
+    });
+}
 
         // ---------- ЗАПИСЬ КЛИЕНТА ----------
         bookBtn.addEventListener('click', async () => {
