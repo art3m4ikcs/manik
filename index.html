@@ -185,6 +185,37 @@
             .years-sidebar { width: 100%; display: flex; overflow-x: auto; }
             .years-sidebar button { flex-shrink: 0; }
         }
+        /* Архив: крупные ячейки */
+.archive-content .days-grid {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+.archive-content .day-cell {
+    font-size: 1.2rem;
+    padding: 10px;
+    aspect-ratio: auto;
+    height: 48px;
+}
+.archive-content .day-cell.has-appointments {
+    background: #ffe0ea;
+    font-weight: 600;
+}
+.archive-detail {
+    margin-top: 15px;
+    background: #fff0f5;
+    border-radius: 16px;
+    padding: 15px;
+}
+.archive-detail h4 {
+    color: #b3436e;
+    margin-bottom: 8px;
+}
+.archive-detail .booking-info {
+    background: white;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+}
     </style>
 </head>
 <body>
@@ -639,27 +670,56 @@
     }
 
     function showCalendarForMonth(year, month) {
-        archiveContent.innerHTML = `<button class="back-btn" id="backToMonths">← К месяцам</button>`;
-        const calDiv = document.createElement('div');
-        calDiv.className = 'days-grid';
-        // Строим календарь как в основном, но без выделения
-        const firstDay = new Date(year, month-1, 1).getDay();
-        const daysInMonth = new Date(year, month, 0).getDate();
-        let html = '';
-        for (let i=0; i<firstDay; i++) html += '<div class="day-cell other-month"></div>';
-        for (let d=1; d<=daysInMonth; d++) {
-            const date = new Date(year, month-1, d);
-            const dk = formatDateKey(date);
-            const apps = appointments[dk] || [];
-            let cls = 'day-cell';
-            if (apps.length) cls += ' has-appointments';
-            let tooltip = apps.map(a=>`${a.time}-${parseInt(a.time)+2}:00 ${a.name}`).join('\n');
-            html += `<div class="${cls}" title="${tooltip}">${d}</div>`;
-        }
-        calDiv.innerHTML = html;
-        archiveContent.appendChild(calDiv);
-        document.getElementById('backToMonths').addEventListener('click', ()=>buildMonthsList(year));
+    archiveContent.innerHTML = `<button class="back-btn" id="backToMonths">← К месяцам</button>`;
+    const calDiv = document.createElement('div');
+    calDiv.className = 'days-grid';
+    const firstDay = new Date(year, month-1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    let html = '';
+    for (let i=0; i<firstDay; i++) html += '<div class="day-cell other-month"></div>';
+    for (let d=1; d<=daysInMonth; d++) {
+        const date = new Date(year, month-1, d);
+        const dk = formatDateKey(date);
+        const apps = appointments[dk] || [];
+        let cls = 'day-cell';
+        if (apps.length) cls += ' has-appointments';
+        html += `<div class="${cls}" data-date="${dk}">${d}</div>`;
     }
+    calDiv.innerHTML = html;
+    archiveContent.appendChild(calDiv);
+
+    // Блок для отображения записей выбранного дня
+    const detailDiv = document.createElement('div');
+    detailDiv.className = 'archive-detail';
+    detailDiv.id = 'archiveDayDetail';
+    detailDiv.style.display = 'none';
+    archiveContent.appendChild(detailDiv);
+
+    // Обработчики клика по дням
+    calDiv.querySelectorAll('.day-cell[data-date]').forEach(cell => {
+        cell.addEventListener('click', function() {
+            const dk = this.dataset.date;
+            const dayApps = appointments[dk] || [];
+            const detail = document.getElementById('archiveDayDetail');
+            if (dayApps.length === 0) {
+                detail.style.display = 'block';
+                detail.innerHTML = '<h4>Нет записей на этот день</h4>';
+            } else {
+                const [y,m,d] = dk.split('-').map(Number);
+                const dateStr = new Date(y,m-1,d).toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
+                let listHtml = `<h4>${dateStr}</h4>`;
+                dayApps.forEach(app => {
+                    const end = `${parseInt(app.time)+2}:00`;
+                    listHtml += `<div class="booking-info"><strong>${app.time}-${end}</strong> — ${app.name} (${app.phone})</div>`;
+                });
+                detail.innerHTML = listHtml;
+                detail.style.display = 'block';
+            }
+        });
+    });
+
+    document.getElementById('backToMonths').addEventListener('click', ()=>buildMonthsList(year));
+}
 
     // ===== ПОИСК ОКНА =====
     const searchWindowBtn = document.getElementById('searchWindowBtn');
