@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Маникюр Запись</title>
+    <title>Manik</title>
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCc0LDQvdC40LrRjtGAINCX0LDQv9C40YHRjCIsCiAgInNob3J0X25hbWUiOiAi0JzQsNC90LjQutGO0YAiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZWVmOCIsCiAgInRoZW1lX2NvbG9yIjogIiNlMzZiOGMiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJpY29uLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfQogIF0KfQ==">
     <style>
         * {
@@ -233,8 +233,8 @@
 
     <!-- Главная страница -->
     <div id="mainPage" class="page active">
-        <h1> Маникюр</h1>
-        <div class="subtitle">Запись на двухчасовые сеансы</div>
+        <h1>Manik</h1>
+        <div class="subtitle">Запись</div>
         <div class="master-toolbar" id="masterToolbar">
             <button class="toggle-dayoff-btn" id="toggleDayOffBtn" style="display:none;">Сделать выходным</button>
             <button class="multi-select-btn" id="multiSelectBtn"> Выбрать несколько</button>
@@ -280,20 +280,17 @@
     <div class="modal" id="searchModal">
     <div class="modal-content">
         <h3 style="color:#b3436e;">Поиск свободного окна</h3>
-        <button class="auth-btn" id="searchFromTodayBtn" style="margin-bottom:10px;"> Искать от сегодня</button>
-        <label>С какой даты:</label>
-        <input type="date" id="searchStartDate">
+        <label>С какой даты искать:</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <input type="date" id="searchStartDate">
+            <button class="auth-btn" id="searchFromTodayBtn">От сегодня</button>
+        </div>
         <label>До какой даты (необязательно):</label>
         <input type="date" id="searchEndDate">
-        <label>Какое время искать (выберите нужные слоты):</label>
-        <div class="time-slots" id="searchTimeSlots">
-            <button class="time-slot" data-time="08:00">8:00-10:00</button>
-            <button class="time-slot" data-time="10:00">10:00-12:00</button>
-            <button class="time-slot" data-time="12:00">12:00-14:00</button>
-            <button class="time-slot" data-time="14:00">14:00-16:00</button>
-            <button class="time-slot" data-time="16:00">16:00-18:00</button>
-            <button class="time-slot" data-time="18:00">18:00-20:00</button>
-        </div>
+        <label>Время (с какого часа):</label>
+        <input type="time" id="searchTimeFrom" value="08:00">
+        <label>Время (до какого часа):</label>
+        <input type="time" id="searchTimeTo" value="18:00">
         <button class="book-btn" id="searchBtn">Найти</button>
         <div id="searchResults" style="margin-top:15px;max-height:200px;overflow-y:auto;"></div>
         <button class="auth-btn" style="margin-top:10px;" id="closeSearchModal">Закрыть</button>
@@ -732,93 +729,103 @@
 }
 
     // ===== ПОИСК ОКНА =====
-    // ===== ПОИСК ОКНА =====
+// ===== ПОИСК ОКНА (обновлённый) =====
 const searchWindowBtn = document.getElementById('searchWindowBtn');
 const searchModal = document.getElementById('searchModal');
 const closeSearchModal = document.getElementById('closeSearchModal');
 const searchBtn = document.getElementById('searchBtn');
 const searchResults = document.getElementById('searchResults');
-const searchStartDate = document.getElementById('searchStartDate');
-const searchEndDate = document.getElementById('searchEndDate');
 const searchFromTodayBtn = document.getElementById('searchFromTodayBtn');
 
-// Работа с выбором слотов в модалке
-const searchTimeSlotsContainer = document.getElementById('searchTimeSlots');
-let selectedSearchSlots = new Set(allTimeSlots); // по умолчанию выбраны все
-
-// Инициализация: все слоты выделены
-searchTimeSlotsContainer.querySelectorAll('.time-slot').forEach(slot => {
-    slot.classList.add('selected-time'); // стиль выделения
-    slot.addEventListener('click', () => {
-        const time = slot.dataset.time;
-        if (selectedSearchSlots.has(time)) {
-            selectedSearchSlots.delete(time);
-            slot.classList.remove('selected-time');
-        } else {
-            selectedSearchSlots.add(time);
-            slot.classList.add('selected-time');
-        }
-    });
-});
-
-// Установить начальную дату на завтра
-searchFromTodayBtn.addEventListener('click', () => {
+searchWindowBtn.addEventListener('click', () => {
+    // При открытии сразу заполняем от завтрашнего дня (запись только с завтра)
     const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    searchStartDate.value = tomorrow.toISOString().split('T')[0];
-    searchEndDate.value = ''; // сброс конечной даты
+    tomorrow.setDate(tomorrow.getDate()+1);
+    document.getElementById('searchStartDate').value = tomorrow.toISOString().split('T')[0];
+    document.getElementById('searchEndDate').value = '';
+    document.getElementById('searchTimeFrom').value = '08:00';
+    document.getElementById('searchTimeTo').value = '18:00';
+    searchResults.innerHTML = '';
+    searchModal.classList.add('active');
 });
-
-searchWindowBtn.addEventListener('click', () => searchModal.classList.add('active'));
 closeSearchModal.addEventListener('click', () => searchModal.classList.remove('active'));
 
-searchBtn.addEventListener('click', () => {
-    const start = searchStartDate.value;
-    const end = searchEndDate.value;
-    if (!start) { alert('Выберите начальную дату'); return; }
-    if (selectedSearchSlots.size === 0) { alert('Выберите хотя бы один слот времени'); return; }
+searchFromTodayBtn.addEventListener('click', () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate()+1);
+    document.getElementById('searchStartDate').value = tomorrow.toISOString().split('T')[0];
+});
 
+searchBtn.addEventListener('click', () => {
+    const start = document.getElementById('searchStartDate').value;
+    const end = document.getElementById('searchEndDate').value;
+    const timeFrom = document.getElementById('searchTimeFrom').value;
+    const timeTo = document.getElementById('searchTimeTo').value;
+
+    if (!start) { alert('Выберите начальную дату'); return; }
     const startDate = new Date(start);
     const endDate = end ? new Date(end) : null;
+    // Если конечная дата не указана, ищем месяц вперёд
+    const maxDate = endDate || new Date(startDate.getFullYear(), startDate.getMonth()+1, 0);
+
+    // Преобразуем время в минуты для сравнения
+    const fromMinutes = timeFrom ? parseInt(timeFrom.split(':')[0])*60 + parseInt(timeFrom.split(':')[1]) : 8*60;
+    const toMinutes = timeTo ? parseInt(timeTo.split(':')[0])*60 + parseInt(timeTo.split(':')[1]) : 18*60;
+
     const results = [];
     const current = new Date(startDate);
-
-    // Ограничим поиск одним годом вперёд, если конечная дата не задана
-    const maxDate = endDate || new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
-
     while (current <= maxDate) {
         if (isDateInPast(current)) { current.setDate(current.getDate()+1); continue; }
         const dk = formatDateKey(current);
         if (!isDayOff(dk)) {
             const booked = getBookedSlotsForDate(current);
-            // Перебираем только выбранные слоты
-            selectedSearchSlots.forEach(time => {
-                if (!booked.includes(time) && !isPastSlot(current, time)) {
-                    results.push({ date: new Date(current), time });
+            allTimeSlots.forEach(time => {
+                const [h,m] = time.split(':').map(Number);
+                const slotMinutes = h*60 + m;
+                // Проверка, попадает ли слот в указанный временной диапазон
+                if (slotMinutes >= fromMinutes && slotMinutes < toMinutes) {
+                    if (!booked.includes(time) && !isPastSlot(current, time)) {
+                        results.push({ date: new Date(current), time });
+                    }
                 }
             });
         }
-        current.setDate(current.getDate() + 1);
-        // Предотвращаем бесконечный цикл, если конечная дата не задана и прошло больше года
-        if (!endDate && current > maxDate) break;
+        current.setDate(current.getDate()+1);
     }
 
     if (results.length === 0) {
         searchResults.innerHTML = '<p style="color:#b3436e;">Нет свободных окон в выбранном диапазоне.</p>';
     } else {
-        // Ограничим вывод первыми 50 результатами для производительности
-        const displayResults = results.slice(0, 50);
-        searchResults.innerHTML = displayResults.map(r => {
+        searchResults.innerHTML = results.map(r => {
             const d = r.date.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
-            const endTime = `${parseInt(r.time)+2}:00`;
-            return `<div class="booking-info" style="margin-bottom:6px;">${d} ${r.time}-${endTime}</div>`;
+            return `<div class="search-result-item" style="margin-bottom:6px;background:#fff0f5;padding:6px 12px;border-radius:12px;cursor:pointer;" data-date="${formatDateKey(r.date)}" data-time="${r.time}">${d} ${r.time}-${parseInt(r.time)+2}:00</div>`;
         }).join('');
-        if (results.length > 50) {
-            searchResults.innerHTML += '<p style="color:#b3436e; margin-top:8px;">Показаны первые 50 результатов. Уточните диапазон для более точного поиска.</p>';
-        }
+
+        // Делаем результаты кликабельными: при клике переходим к записи на этот день и время
+        document.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const dateKey = this.dataset.date;
+                const time = this.dataset.time;
+                // Закрываем модалку
+                searchModal.classList.remove('active');
+                // Устанавливаем выбранную дату и время в основном календаре
+                const [y,m,d] = dateKey.split('-').map(Number);
+                selectedDate = new Date(y,m-1,d);
+                selectedTime = time;
+                // Переключаемся на главную страницу, если были в архиве
+                mainPage.classList.add('active');
+                archivePage.classList.remove('active');
+                // Обновляем календарь и показываем форму записи
+                currentYear = selectedDate.getFullYear();
+                currentMonth = selectedDate.getMonth();
+                renderAll();
+                updateUIForSelectedDate();
+                // Прокручиваем к форме
+                bookingFormArea.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
     }
 });
-
     // Инициализация
     subscribeToUpdates();
 </script>
