@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="icon.png" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon.png" type="image/png">
     <title>Маникюр Запись</title>
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCc0LDQvdC40LrRjtGAINCX0LDQv9C40YHRjCIsCiAgInNob3J0X25hbWUiOiAi0JzQsNC90LjQutGO0YAiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZWVmOCIsCiAgInRoZW1lX2NvbG9yIjogIiNlMzZiOGMiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJpY29uLnBuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfQogIF0KfQ==">
     <style>
@@ -13,17 +13,23 @@
         }
         body {
             background: linear-gradient(135deg, #ffeef8 0%, #ffd9e6 100%);
-            min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
         .loader-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,238,248,0.95); backdrop-filter: blur(10px);
+            background: rgba(255, 238, 248, 0.95);
+            backdrop-filter: blur(10px);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 999; transition: opacity 0.5s ease, visibility 0.5s ease;
         }
         .loader-container.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .spinner {
-            width: 50px; height: 50px; border: 5px solid rgba(227,107,140,0.2);
+            width: 50px; height: 50px;
+            border: 5px solid rgba(227, 107, 140, 0.2);
             border-top: 5px solid #e36b8c; border-radius: 50%;
             animation: spin 1s linear infinite; margin-bottom: 20px;
         }
@@ -31,17 +37,20 @@
         .loader-text { color: #b3436e; font-weight: 600; font-size: 1.2rem; }
 
         .app-container {
-            width: 100%; max-width: 900px; background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(20px); border-radius: 32px;
-            box-shadow: 0 30px 50px rgba(200,90,120,0.2); padding: 25px 20px;
+            width: 100%; max-width: 900px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            box-shadow: 0 30px 50px rgba(200, 90, 120, 0.2);
+            padding: 25px 20px;
             opacity: 0; transform: translateY(10px);
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
         .app-container.visible { opacity: 1; transform: translateY(0); }
 
         .auth-panel {
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
-            gap: 10px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
         }
         .auth-status {
             background: #fff0f5; padding: 8px 16px; border-radius: 20px;
@@ -51,17 +60,16 @@
         .auth-btn {
             background: #e36b8c; border: none; color: white; font-weight: 600;
             padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
-            white-space: nowrap; transition: all 0.2s ease; box-shadow: 0 4px 8px rgba(227,107,140,0.3);
+            white-space: nowrap; transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(227,107,140,0.3);
         }
         .auth-btn:hover { background: #c94b6e; transform: translateY(-1px); }
         h1 { font-size: 2rem; font-weight: 600; color: #b3436e; text-align: center; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #a05d7a; font-size: 0.95rem; margin-bottom: 20px; }
 
-        /* Страницы */
         .page { display: none; opacity: 0; transition: opacity 0.4s ease; }
         .page.active { display: block; opacity: 1; }
 
-        /* Панель мастера */
         .master-toolbar {
             display: none; background: #fff0f5; border-radius: 20px; padding: 10px 15px;
             margin-bottom: 15px; box-shadow: 0 6px 14px rgba(180,70,110,0.1);
@@ -163,7 +171,6 @@
         }
         .delete-btn:hover { background: #c0392b !important; transform: scale(1.05); }
 
-        /* Модальные окна */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center;
@@ -192,7 +199,6 @@
         .btn-secondary { background: #f0d3e0; color: #5c2d43; }
         .btn-secondary:hover { background: #e0c0d0; }
 
-        /* Архив */
         .archive-container { display: flex; gap: 20px; min-height: 400px; }
         .years-sidebar {
             width: 100px; background: #fff0f5; border-radius: 20px; padding: 15px;
@@ -240,23 +246,23 @@
 
 <div class="app-container" id="appContainer">
     <div class="auth-panel">
-        <span class="auth-status" id="authStatus"> Гость</span>
+        <span class="auth-status" id="authStatus">👤 Гость</span>
         <div class="auth-buttons">
             <button class="auth-btn" id="loginBtn">Войти как мастер</button>
-            <button class="auth-btn" id="myBookingsBtn"> Мои записи</button>
-            <button class="auth-btn" id="archiveBtn"> Архив</button>
-            <button class="auth-btn" id="searchWindowBtn"> Поиск окна</button>
-            <button class="auth-btn" id="blacklistBtn" style="display:none;">ЧС</button>
+            <button class="auth-btn" id="myBookingsBtn">📋 Мои записи</button>
+            <button class="auth-btn" id="archiveBtn">📂 Архив</button>
+            <button class="auth-btn" id="searchWindowBtn">🔍 Поиск окна</button>
+            <button class="auth-btn" id="blacklistBtn" style="display:none;">🚫 ЧС</button>
         </div>
     </div>
 
     <div id="mainPage" class="page active">
-        <h1>Manik</h1>
-        <div class="subtitle">Запись</div>
+        <h1>💅 Маникюр</h1>
+        <div class="subtitle">Запись на двухчасовые сеансы</div>
         <div class="master-toolbar" id="masterToolbar">
             <button class="toggle-dayoff-btn" id="toggleDayOffBtn" style="display:none;">Сделать выходным</button>
-            <button class="multi-select-btn" id="multiSelectBtn">Выбрать несколько</button>
-            <button class="apply-multi-btn" id="applyMultiBtn" style="display:none;">Применить ко всем</button>
+            <button class="multi-select-btn" id="multiSelectBtn">✎ Выбрать несколько</button>
+            <button class="apply-multi-btn" id="applyMultiBtn" style="display:none;">Сделать выходными</button>
             <button class="apply-multi-btn" id="applyMultiWorkBtn" style="display:none;">Сделать рабочими</button>
         </div>
         <div class="calendar-header">
@@ -266,9 +272,9 @@
         </div>
         <div class="weekdays"><span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span></div>
         <div class="days-grid" id="daysGrid"></div>
-        <div class="selected-date-info" id="selectedDateDisplay"><span> Дата не выбрана</span></div>
+        <div class="selected-date-info" id="selectedDateDisplay"><span>📅 Дата не выбрана</span></div>
         <div id="timeSelectionArea" style="display:none;">
-            <div style="font-weight:600;color:#5c2d43;margin-bottom:5px;">Доступное время :</div>
+            <div style="font-weight:600;color:#5c2d43;margin-bottom:5px;">Доступное время (2 часа):</div>
             <div class="time-slots" id="timeSlotsContainer"></div>
         </div>
         <div id="bookingFormArea" style="display:none;" class="booking-form">
@@ -277,12 +283,12 @@
             <button class="book-btn" id="bookBtn">Записаться</button>
         </div>
         <div class="admin-bookings" id="adminBookings" style="display:none;">
-            <h2> Все записи (мастер)</h2>
+            <h2>📋 Все записи (мастер)</h2>
             <div id="bookingsContainer"></div>
         </div>
     </div>
 
-    <div id="archivePage" class="page" style="display:none;">
+    <div id="archivePage" class="page">
         <button class="back-btn" id="backFromArchive">← Назад</button>
         <div class="archive-container">
             <div class="years-sidebar" id="yearsSidebar"></div>
@@ -361,19 +367,20 @@
     </div>
 </div>
 
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-    // ⚠️ ВСТАВЬТЕ СВОИ КЛЮЧИ
+    // ⚠️ ЗАМЕНИТЕ НА СВОИ КЛЮЧИ
     const firebaseConfig = {
-        apiKey: "AIzaSyCetvGM77zUc_Llh5p-FLTF6PkvH-lCPQ8",
-        authDomain: "manik-56a31.firebaseapp.com",
-        projectId: "manik-56a31",
-        storageBucket: "manik-56a31.firebasestorage.app",
-        messagingSenderId: "540265958043",
-        appId: "1:540265958043:web:f3dd0d7ee6b9c9ffbe543e",
+        apiKey: "AIzaSy...",
+        authDomain: "your-project.firebaseapp.com",
+        projectId: "your-project",
+        storageBucket: "your-project.appspot.com",
+        messagingSenderId: "000000000000",
+        appId: "1:000000000000:web:abc123"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -428,7 +435,6 @@
     const backFromArchive = document.getElementById('backFromArchive');
     let selectedArchiveYear = null, selectedArchiveMonth = null;
 
-    // Модальные окна
     const loginModal = document.getElementById('loginModal');
     const messageModal = document.getElementById('messageModal');
     const confirmModal = document.getElementById('confirmModal');
@@ -438,7 +444,7 @@
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-    // Универсальные функции
+    // Универсальные модальные окна
     function showMessage(text) {
         document.getElementById('messageText').textContent = text;
         messageModal.classList.add('active');
@@ -466,16 +472,14 @@
     document.getElementById('closeSearchModal').addEventListener('click', () => searchModal.classList.remove('active'));
     document.getElementById('closeBlacklistModal').addEventListener('click', () => blacklistModal.classList.remove('active'));
 
-    // Загрузка masterEmail из Firestore
     async function loadMasterEmail() {
         try {
             const doc = await db.collection('settings').doc('master').get();
             if (doc.exists) masterEmail = doc.data().email;
-            else console.warn('Документ settings/master не найден');
+            else console.warn('settings/master не найден');
         } catch (e) { console.error(e); }
     }
 
-    // Аутентификация
     auth.onAuthStateChanged(async (user) => {
         if (!firstLoadCompleted) {
             await loadMasterEmail();
@@ -486,13 +490,13 @@
         }
         if (user) {
             isAdmin = !!(masterEmail && user.email === masterEmail);
-            authStatus.textContent = isAdmin ? ' Мастер' : ' Клиент';
+            authStatus.textContent = isAdmin ? '🔑 Мастер' : '👤 Клиент';
             loginBtn.textContent = isAdmin ? 'Выйти' : 'Войти как мастер';
             blacklistBtn.style.display = isAdmin ? 'inline-block' : 'none';
         } else {
             auth.signInAnonymously().catch(console.error);
             isAdmin = false;
-            authStatus.textContent = ' Гость';
+            authStatus.textContent = '👤 Гость';
             loginBtn.textContent = 'Войти как мастер';
             blacklistBtn.style.display = 'none';
         }
@@ -519,7 +523,6 @@
             .catch(err => showMessage('Ошибка входа: ' + err.message));
     });
 
-    // Мои записи
     myBookingsBtn.addEventListener('click', () => myBookingsModal.classList.add('active'));
     document.getElementById('findMyBookingsBtn').addEventListener('click', () => {
         const phone = document.getElementById('myBookingsPhone').value.trim();
@@ -548,7 +551,6 @@
         }
     });
 
-    // Загрузка данных
     function loadDataFromFirestore() {
         return Promise.all([
             db.collection('daysOff').get(),
@@ -624,7 +626,6 @@
         renderAdminBookings();
     }
 
-    // Календарь
     function renderCalendar() {
         monthYearEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -667,15 +668,18 @@
     function updateMasterToolbar() {
         if (!isAdmin) { masterToolbar.classList.remove('visible'); return; }
         masterToolbar.classList.add('visible');
+        if (selectedDate && !multiSelectMode) {
+            toggleDayOffBtn.style.display='inline-block';
+            toggleDayOffBtn.textContent = isDayOff(formatDateKey(selectedDate)) ? 'Сделать рабочим' : 'Сделать выходным';
+        } else toggleDayOffBtn.style.display='none';
+        multiSelectBtn.textContent = multiSelectMode ? 'Завершить выбор' : '✎ Выбрать несколько';
         if (multiSelectMode && selectedDaysSet.size > 0) {
-            applyMultiBtn.style.display = 'inline-block';
-            applyMultiWorkBtn.style.display = 'inline-block';
+            applyMultiBtn.style.display='inline-block';
+            applyMultiWorkBtn.style.display='inline-block';
         } else {
-            applyMultiBtn.style.display = 'none';
-            applyMultiWorkBtn.style.display = 'none';
+            applyMultiBtn.style.display='none';
+            applyMultiWorkBtn.style.display='none';
         }
-        multiSelectBtn.textContent = multiSelectMode ? 'Завершить выбор' : ' Выбрать несколько';
-        applyMultiBtn.style.display = (multiSelectMode && selectedDaysSet.size>0) ? 'inline-block' : 'none';
     }
 
     toggleDayOffBtn.addEventListener('click', () => {
@@ -694,30 +698,25 @@
         selectedDaysSet.clear(); multiSelectMode = false;
         renderCalendar(); updateMasterToolbar(); updateUIForSelectedDate();
     });
-    applyMultiWorkBtn.addEventListener ('click', () => {
-        selectedDaysSet.forEach(dk => {
-            if (isDayOff(dk)) setDayOff(dk, false);
-        });
-        selectedDaysSet.clear();
-        multiSelectMode = false;
-        renderCalendar();
-        updateMasterToolbar();
-        updateUIForSelectedDate();
+    applyMultiWorkBtn.addEventListener('click', () => {
+        selectedDaysSet.forEach(dk => { if (isDayOff(dk)) setDayOff(dk, false); });
+        selectedDaysSet.clear(); multiSelectMode = false;
+        renderCalendar(); updateMasterToolbar(); updateUIForSelectedDate();
     });
 
     function updateUIForSelectedDate() {
         if (!selectedDate || multiSelectMode) {
-            selectedDateDisplay.innerHTML='<span> Дата не выбрана</span>';
+            selectedDateDisplay.innerHTML='<span>📅 Дата не выбрана</span>';
             timeSelectionArea.style.display='none'; bookingFormArea.style.display='none';
             return;
         }
         const dk = formatDateKey(selectedDate);
-        selectedDateDisplay.innerHTML=`<span> ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}</span>`;
+        selectedDateDisplay.innerHTML=`<span>📅 ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}</span>`;
         timeSelectionArea.innerHTML = `<div style="font-weight:600;color:#5c2d43;margin-bottom:5px;">Доступное время (2 часа):</div><div class="time-slots" id="timeSlotsContainer"></div>`;
         timeSlotsContainer = document.getElementById('timeSlotsContainer');
         timeSelectionArea.style.display='block';
         if (isDateInPast(selectedDate)) {
-            timeSelectionArea.innerHTML = '<div class="past-message"> Запись только с завтрашнего дня</div>';
+            timeSelectionArea.innerHTML = '<div class="past-message">⛔ Запись только с завтрашнего дня</div>';
             bookingFormArea.style.display='none'; return;
         }
         if (isDayOff(dk)) { timeSelectionArea.style.display='none'; bookingFormArea.style.display='none'; return; }
@@ -755,7 +754,7 @@
         try {
             await addAppointment(dk, selectedTime, name, phone);
             clientNameInput.value=''; clientPhoneInput.value=''; selectedTime=null;
-            updateUIForSelectedDate(); showMessage(' Вы записаны!');
+            updateUIForSelectedDate(); showMessage('✅ Вы записаны!');
         } catch(e) { showMessage('Ошибка: '+e.message); }
     });
 
@@ -790,7 +789,6 @@
     function showArchive() {
         mainPage.classList.remove('active');
         archivePage.classList.add('active');
-        // Очищаем перед заполнением
         yearsSidebar.innerHTML = '';
         archiveContent.innerHTML = '';
         buildYearsList();
@@ -820,19 +818,17 @@
             btn.addEventListener('click', function() {
                 selectedArchiveYear = this.dataset.year;
                 selectedArchiveMonth = null;
-                // убираем активный класс со всех кнопок годов
                 yearsSidebar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 buildMonthsList(selectedArchiveYear);
             });
             yearsSidebar.appendChild(btn);
         });
-        // автоматически выбираем первый год
         if (sorted.length) yearsSidebar.querySelector('button').click();
     }
 
     function buildMonthsList(year) {
-        archiveContent.innerHTML = ''; // очищаем
+        archiveContent.innerHTML = '';
         const monthsWithApps = new Set();
         Object.keys(appointments).forEach(dk => {
             const [y,m] = dk.split('-');
@@ -854,7 +850,7 @@
     }
 
     function showCalendarForMonth(year, month) {
-        archiveContent.innerHTML = ''; // очищаем
+        archiveContent.innerHTML = '';
         const backBtn = document.createElement('button');
         backBtn.className = 'back-btn';
         backBtn.textContent = '← К месяцам';
@@ -907,7 +903,7 @@
         });
     }
 
-    // ========== ПОИСК ОКНА ==========
+    // Поиск окна
     searchWindowBtn.addEventListener('click', () => searchModal.classList.add('active'));
     document.getElementById('searchBtn').addEventListener('click', () => {
         const startDate = document.getElementById('searchStartDate').valueAsDate || new Date();
@@ -941,7 +937,7 @@
         }
     });
 
-    // ========== ЧЁРНЫЙ СПИСОК ==========
+    // Чёрный список
     blacklistBtn.addEventListener('click', () => { blacklistModal.classList.add('active'); renderBlacklist(); });
     document.getElementById('addBlacklistBtn').addEventListener('click', () => {
         const phone = document.getElementById('newBlacklistPhone').value.trim();
@@ -960,7 +956,7 @@
         });
     }
 
-    // ========== УВЕДОМЛЕНИЯ ==========
+    // Уведомления
     if ('Notification' in window) Notification.requestPermission();
     function checkUpcomingAppointments() {
         if (Notification.permission !== 'granted') return;
@@ -989,7 +985,6 @@
     }
     setInterval(checkUpcomingAppointments, 300000);
 
-    // Навигация по месяцам
     document.getElementById('prevMonth').addEventListener('click', ()=>{ currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} resetSelection(); renderAll(); });
     document.getElementById('nextMonth').addEventListener('click', ()=>{ currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} resetSelection(); renderAll(); });
     function resetSelection() { selectedDate=null; selectedTime=null; multiSelectMode=false; selectedDaysSet.clear(); timeSelectionArea.style.display='none'; bookingFormArea.style.display='none'; }
