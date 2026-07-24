@@ -188,32 +188,34 @@
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,126,179,0.7); }
         .btn-secondary:hover { background: rgba(255,255,255,0.2); }
 
-        /* Выпадающий список времён (поиск окон) */
-        .time-dropdown {
-            position: relative; display: inline-block; width: 100%;
+        /* Архив */
+        .archive-container { display: flex; gap: 20px; max-height: 70vh; }
+        .archive-years-panel {
+            width: 90px; background: rgba(255,255,255,0.03); border-radius: 20px;
+            padding: 15px; overflow-y: auto; flex-shrink: 0;
         }
-        .time-dropdown-btn {
-            width: 100%; padding: 12px; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,126,179,0.3); border-radius: 20px; color: white;
-            text-align: left; cursor: pointer; transition: all 0.3s ease;
+        .archive-years-panel button {
+            display: block; width: 100%; background: transparent; border: none;
+            color: #ccc; padding: 10px; border-radius: 12px; margin-bottom: 6px;
+            cursor: pointer; font-weight: 500; transition: all 0.2s;
         }
-        .time-dropdown-btn:hover { border-color: #ff7eb3; }
-        .time-dropdown-options {
-            display: none; position: absolute; top: 100%; left: 0; right: 0;
-            background: rgba(25,25,45,0.95); backdrop-filter: blur(10px);
-            border-radius: 15px; margin-top: 5px; padding: 10px; z-index: 10;
-            border: 1px solid rgba(255,126,179,0.4); max-height: 200px; overflow-y: auto;
-            animation: fadeInDropdown 0.3s ease;
+        .archive-years-panel button:hover, .archive-years-panel button.active {
+            background: rgba(255,126,179,0.2); color: #ff7eb3;
         }
-        .time-dropdown-options.show { display: block; }
-        .time-dropdown-options label {
-            display: block; padding: 8px; color: #ddd; cursor: pointer; transition: all 0.2s;
+        .archive-main { flex: 1; overflow-y: auto; }
+        .archive-months-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
         }
-        .time-dropdown-options label:hover { background: rgba(255,126,179,0.2); }
-        .chat-container { height: 300px; overflow-y: auto; margin: 15px 0; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 15px; }
-        .message { margin: 8px 0; padding: 10px 15px; border-radius: 20px; max-width: 80%; animation: fadeIn 0.3s ease; }
-        .user-message { background: rgba(255,126,179,0.3); margin-left: auto; color: white; }
-        .bot-message { background: rgba(255,255,255,0.1); margin-right: auto; color: #eee; }
+        .archive-month-card {
+            background: rgba(255,255,255,0.05); border-radius: 16px;
+            padding: 20px 10px; text-align: center; cursor: pointer;
+            color: #ddd; transition: all 0.3s; border: 1px solid transparent;
+        }
+        .archive-month-card:hover { background: rgba(255,126,179,0.15); border-color: #ff7eb3; }
+        .archive-month-card.has-records { border-color: #ff7eb3; }
+        .archive-calendar { margin-top: 15px; }
+        .archive-detail { margin-top: 15px; background: rgba(255,126,179,0.05); border-radius: 16px; padding: 15px; }
 
         .login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -235,6 +237,7 @@
     <div class="loader-text">Manik загружается...</div>
 </div>
 
+<!-- Экран входа -->
 <div class="login-screen" id="loginScreen">
     <div class="modal-content" style="max-width: 400px;">
         <div class="tab-buttons">
@@ -257,62 +260,17 @@
     </div>
 </div>
 
-<div class="app-container" id="appContainer">
-    <div class="calendar-wrapper" id="calendarWrapper">
-        <div class="header">
-            <div class="logo">💅 Manik</div>
-            <div class="dropdown">
-                <button class="menu-btn" id="menuBtn">☰ Меню</button>
-                <div class="dropdown-content" id="dropdownMenu">
-                    <button id="archiveBtn">📂 Архив</button>
-                    <button id="myBookingsBtn">📋 Мои записи</button>
-                    <button id="aiChatBtn">🤖 ИИ консультант</button>
-                    <button id="searchWindowBtn">🔍 Поиск окна</button>
-                    <button id="blacklistBtn" style="display:none;">🚫 Чёрный список</button>
-                    <button id="logoutBtn">🚪 Выйти</button>
-                </div>
-            </div>
-        </div>
-        <div id="mainPage">
-            <div class="calendar-header">
-                <button class="nav-btn" id="prevMonth">◀</button>
-                <span class="month-year" id="monthYear"></span>
-                <button class="nav-btn" id="nextMonth">▶</button>
-            </div>
-            <div class="weekdays">
-                <span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span>
-            </div>
-            <div class="days-grid" id="daysGrid"></div>
-            <div style="background:rgba(255,126,179,0.1);border-radius:20px;padding:15px;margin:15px 0;color:#ff7eb3;" id="selectedDateDisplay">
-                📅 Дата не выбрана
-            </div>
-            <div id="timeSelectionArea" style="display:none;">
-                <div style="font-weight:600;color:#ff7eb3;margin-bottom:8px;">Доступное время (2 часа):</div>
-                <div class="time-slots" id="timeSlotsContainer"></div>
-            </div>
-            <div id="bookingFormArea" style="display:none;" class="booking-form">
-                <input type="text" id="clientName" placeholder="Ваше имя">
-                <input type="tel" id="clientPhone" placeholder="Телефон (11 цифр)">
-                <textarea id="clientNote" placeholder="Заметка (необязательно)" rows="2"></textarea>
-                <input type="file" id="designFile" accept="image/*" style="display:none;">
-                <button class="book-btn" id="bookBtn">Записаться</button>
-            </div>
-            <div id="adminBookings" style="display:none;margin-top:30px;background:rgba(255,126,179,0.05);border-radius:20px;padding:20px;">
-                <h2 style="color:#ff7eb3;">Все записи</h2>
-                <div id="bookingsContainer"></div>
-            </div>
-        </div>
-    </div>
-    <div class="master-panel" id="masterPanel">
-        <h3 style="color:#ff7eb3; margin-bottom:15px;">Управление</h3>
-        <button class="modal-btn btn-primary" id="toggleDayOffBtn" style="width:100%; margin-bottom:10px;">Сделать выходным</button>
-        <button class="modal-btn btn-secondary" id="multiSelectBtn" style="width:100%; margin-bottom:10px;">✎ Выбрать несколько</button>
-        <button class="modal-btn btn-primary" id="applyMultiOffBtn" style="width:100%; margin-bottom:10px; display:none;">Сделать выходными</button>
-        <button class="modal-btn btn-secondary" id="applyMultiWorkBtn" style="width:100%; display:none;">Сделать рабочими</button>
+<!-- Модальное окно восстановления пароля -->
+<div class="modal" id="forgotPasswordModal">
+    <div class="modal-content">
+        <h3 style="color:#ff7eb3;">Восстановление пароля</h3>
+        <input type="email" id="forgotEmail" placeholder="Ваш email">
+        <button class="modal-btn btn-primary" id="sendResetBtn">Отправить ссылку</button>
+        <button class="modal-btn btn-secondary" id="closeForgotModal">Отмена</button>
     </div>
 </div>
 
-<!-- Модальные окна -->
+<!-- Остальные модальные окна -->
 <div class="modal" id="messageModal">
     <div class="modal-content">
         <p id="messageText" style="color:#ddd;"></p>
@@ -347,14 +305,13 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 
 <script>
-    // ⚠️ ЗАМЕНИТЕ НА ВАШИ КЛЮЧИ
     const firebaseConfig = {
         apiKey: "AIzaSyCetvGM77zUc_Llh5p-FLTF6PkvH-lCPQ8",
         authDomain: "manik-56a31.firebaseapp.com",
         projectId: "manik-56a31",
         storageBucket: "manik-56a31.firebasestorage.app",
         messagingSenderId: "540265958043",
-        appId: "1:540265958043:web:f3dd0d7ee6b9c9ffbe543e"
+        appId: "1:540265958043:web:f3dd0d7ee6b9c9ffbe543e",
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -413,6 +370,7 @@
     const blacklistModal = document.getElementById('blacklistModal');
     const chatContainer = document.getElementById('chatContainer');
     const chatInput = document.getElementById('chatInput');
+    const forgotPasswordModal = document.getElementById('forgotPasswordModal');
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
@@ -452,6 +410,24 @@
     function showLoginScreen() { loginScreen.style.display = 'flex'; appContainer.classList.remove('visible'); loader.classList.add('hidden'); }
     function hideLoginScreen() { loginScreen.style.display = 'none'; }
     function logout() { auth.signOut(); hideLoginScreen(); showLoginScreen(); }
+
+    // Забыли пароль (модальное окно)
+    document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        forgotPasswordModal.classList.add('active');
+    });
+    document.getElementById('sendResetBtn').addEventListener('click', async () => {
+        const email = document.getElementById('forgotEmail').value.trim();
+        if (!email) { showMessage('Введите email'); return; }
+        try {
+            await auth.sendPasswordResetEmail(email);
+            forgotPasswordModal.classList.remove('active');
+            showMessage('Ссылка для сброса пароля отправлена на ' + email);
+        } catch (err) {
+            showMessage('Ошибка: ' + err.message);
+        }
+    });
+    document.getElementById('closeForgotModal').addEventListener('click', () => forgotPasswordModal.classList.remove('active'));
 
     async function initializeAuth() {
         await loadMasterKey();
@@ -501,13 +477,6 @@
                     await db.collection('masters').doc(userCredential.user.uid).set({ email: userCredential.user.email });
                 }
             } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
-        });
-        document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const email = prompt('Введите ваш email для восстановления пароля:');
-            if (!email) return;
-            try { await auth.sendPasswordResetEmail(email); showMessage('Письмо отправлено на ' + email); }
-            catch (err) { showMessage('Ошибка: ' + err.message); }
         });
         logoutBtn.addEventListener('click', logout);
     }
@@ -756,19 +725,19 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // Архив
+    // ========== НОВЫЙ АРХИВ ==========
     const archiveModal = document.createElement('div');
     archiveModal.className = 'modal';
     archiveModal.id = 'archiveModal';
     archiveModal.innerHTML = `
-        <div class="modal-content" style="max-width:800px;">
-            <h3 style="color:#ff7eb3;">Архив записей</h3>
-            <div style="display:flex; gap:15px; margin-top:15px; max-height:60vh;">
-                <div class="years-sidebar" id="archiveYears" style="flex:0 0 80px; overflow-y:auto; background:rgba(255,255,255,0.05); border-radius:15px; padding:10px;"></div>
-                <div style="flex:1; overflow-y:auto;" id="archiveMain">
-                    <div class="archive-months" id="archiveMonths" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
-                    <div class="archive-days" id="archiveDays" style="margin-top:15px;"></div>
-                    <div class="archive-detail" id="archiveDetail" style="margin-top:10px;"></div>
+        <div class="modal-content" style="max-width:850px;">
+            <h3 style="color:#ff7eb3;">📂 Архив записей</h3>
+            <div class="archive-container">
+                <div class="archive-years-panel" id="archiveYears"></div>
+                <div class="archive-main" id="archiveMain">
+                    <div class="archive-months-grid" id="archiveMonths"></div>
+                    <div class="archive-calendar" id="archiveCalendar"></div>
+                    <div class="archive-detail" id="archiveDetail"></div>
                 </div>
             </div>
             <button class="modal-btn btn-secondary" id="closeArchiveModal" style="margin-top:15px;">Закрыть</button>
@@ -777,6 +746,7 @@
     document.body.appendChild(archiveModal);
 
     let filteredAppointments = {};
+
     function openArchive(phone = null) {
         if (phone) {
             const cleaned = phone.replace(/\D/g,'');
@@ -785,71 +755,86 @@
                 const filtered = apps.filter(a => a.phone === cleaned);
                 if (filtered.length) filteredAppointments[dk] = filtered;
             });
-        } else { filteredAppointments = {...appointments}; }
+        } else {
+            filteredAppointments = {...appointments};
+        }
         buildArchiveYears();
         document.getElementById('archiveModal').classList.add('active');
     }
+
     function buildArchiveYears() {
         const years = new Set();
         Object.keys(filteredAppointments).forEach(dk => years.add(dk.split('-')[0]));
         const container = document.getElementById('archiveYears');
         container.innerHTML = '';
-        if (!years.size) { container.innerHTML = '<div style="color:#ddd;">Нет данных</div>'; return; }
+        if (!years.size) {
+            container.innerHTML = '<span style="color:#ddd;">Нет записей</span>';
+            document.getElementById('archiveMonths').innerHTML = '';
+            document.getElementById('archiveCalendar').innerHTML = '';
+            document.getElementById('archiveDetail').innerHTML = '';
+            return;
+        }
         Array.from(years).sort((a,b)=>b-a).forEach(y => {
             const btn = document.createElement('button');
             btn.textContent = y;
-            btn.style.cssText = 'display:block;width:100%;background:transparent;color:white;border:none;padding:8px;border-radius:10px;margin-bottom:5px;cursor:pointer;transition:0.2s;';
-            btn.addEventListener('mouseenter', ()=> btn.style.background = 'rgba(255,126,179,0.3)');
-            btn.addEventListener('mouseleave', ()=> btn.style.background = 'transparent');
-            btn.addEventListener('click', ()=> buildArchiveMonths(y));
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#archiveYears button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                buildArchiveMonths(y);
+            });
             container.appendChild(btn);
         });
         if (years.size) container.querySelector('button').click();
     }
+
     function buildArchiveMonths(year) {
         const monthsWithApps = new Set();
-        Object.keys(filteredAppointments).forEach(dk => { const [y,m] = dk.split('-'); if (y===year) monthsWithApps.add(parseInt(m)); });
+        Object.keys(filteredAppointments).forEach(dk => {
+            const [y,m] = dk.split('-');
+            if (y === year) monthsWithApps.add(parseInt(m));
+        });
         const container = document.getElementById('archiveMonths');
         container.innerHTML = '';
         for (let m = 1; m <= 12; m++) {
             const card = document.createElement('div');
-            card.textContent = monthNames[m-1];
-            card.style.cssText = 'padding:8px 12px; background:rgba(255,255,255,0.05); border-radius:12px; cursor:pointer; transition:0.2s; color:white;';
-            if (monthsWithApps.has(m)) card.style.border = '1px solid #ff7eb3';
-            card.addEventListener('mouseenter', ()=> card.style.background = 'rgba(255,126,179,0.2)');
-            card.addEventListener('mouseleave', ()=> card.style.background = 'rgba(255,255,255,0.05)');
-            card.addEventListener('click', ()=> showArchiveCalendar(year, m));
+            card.className = 'archive-month-card' + (monthsWithApps.has(m) ? ' has-records' : '');
+            card.innerHTML = `<div>${monthNames[m-1]}</div><small style="color:${monthsWithApps.has(m)?'#ff7eb3':'#888'}">${monthsWithApps.has(m) ? 'есть записи' : 'нет записей'}</small>`;
+            card.addEventListener('click', () => showArchiveCalendar(year, m));
             container.appendChild(card);
         }
-        document.getElementById('archiveDays').innerHTML = '';
+        document.getElementById('archiveCalendar').innerHTML = '';
         document.getElementById('archiveDetail').innerHTML = '';
     }
+
     function showArchiveCalendar(year, month) {
-        const daysDiv = document.getElementById('archiveDays');
+        const calDiv = document.getElementById('archiveCalendar');
         const detailDiv = document.getElementById('archiveDetail');
-        daysDiv.innerHTML = ''; detailDiv.innerHTML = '';
+        calDiv.innerHTML = ''; detailDiv.innerHTML = '';
         const firstDay = new Date(year, month-1, 1).getDay();
         const daysInMonth = new Date(year, month, 0).getDate();
-        let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;">';
+        let html = '<div class="days-grid" style="grid-template-columns: repeat(7,1fr); gap:4px;">';
         for (let i=0; i<firstDay; i++) html += '<div></div>';
         for (let d=1; d<=daysInMonth; d++) {
             const dateKey = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const apps = filteredAppointments[dateKey] || [];
-            html += `<div style="text-align:center;padding:5px;border-radius:8px;cursor:pointer;${apps.length?'background:rgba(255,126,179,0.2);':''}" data-date="${dateKey}">${d}</div>`;
+            html += `<div class="day-cell${apps.length?' has-appointments':''}" style="font-size:0.85rem;" data-date="${dateKey}">${d}</div>`;
         }
         html += '</div>';
-        daysDiv.innerHTML = html;
-        daysDiv.querySelectorAll('[data-date]').forEach(el => {
+        calDiv.innerHTML = html;
+        calDiv.querySelectorAll('[data-date]').forEach(el => {
             el.addEventListener('click', function() {
                 const dk = this.dataset.date;
                 const apps = filteredAppointments[dk] || [];
-                if (!apps.length) { detailDiv.innerHTML = '<p style="color:#ddd;">Нет записей</p>'; return; }
+                if (!apps.length) {
+                    detailDiv.innerHTML = '<p style="color:#ddd;">Нет записей</p>';
+                    return;
+                }
                 const [y,m,d] = dk.split('-').map(Number);
                 const dateStr = new Date(y,m-1,d).toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
                 let list = `<h4 style="color:#ff7eb3;">${dateStr}</h4>`;
                 apps.forEach(app => {
-                    list += `<div style="background:rgba(255,255,255,0.05);padding:8px;border-radius:8px;margin-top:5px; color:#ddd;">
-                        <div>${app.time}-${parseInt(app.time)+2}:00 | ${app.name} (${app.phone})</div>
+                    list += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:6px; color:#ddd;">
+                        <div><strong>${app.time}-${parseInt(app.time)+2}:00</strong> — ${app.name} (${app.phone})</div>
                         ${app.note ? `<div style="color:#aaa;">📝 ${app.note}</div>` : ''}
                         ${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#ff7eb3;">📎 Дизайн</a>` : ''}
                     </div>`;
@@ -858,10 +843,10 @@
             });
         });
     }
+
     archiveBtn.addEventListener('click', () => {
         if (isAdmin) openArchive();
         else {
-            // Модальное окно для ввода номера
             const phoneModal = document.createElement('div');
             phoneModal.className = 'modal active';
             phoneModal.innerHTML = `
@@ -883,15 +868,15 @@
     });
     document.getElementById('closeArchiveModal').addEventListener('click', ()=> document.getElementById('archiveModal').classList.remove('active'));
 
-    // Поиск окна
+    // ========== ПОИСК ОКНА ==========
     searchWindowBtn.addEventListener('click', ()=>{
         const modal = document.createElement('div');
         modal.className = 'modal active';
         modal.innerHTML = `
             <div class="modal-content">
-                <h3 style="color:#ff7eb3;">Поиск свободного окна</h3>
-                <label>С даты:</label><input type="date" id="searchFrom">
-                <label>По дату (необязательно):</label><input type="date" id="searchTo">
+                <h3 style="color:#ff7eb3;">🔍 Поиск свободного окна</h3>
+                <label>С какой даты искать:</label><input type="date" id="searchFrom">
+                <label>До какой даты (необязательно):</label><input type="date" id="searchTo">
                 <label>Желаемое время (можно выбрать несколько):</label>
                 <div class="time-dropdown" id="timeDropdown">
                     <button class="time-dropdown-btn" id="timeDropdownBtn">Выберите время</button>
@@ -899,20 +884,19 @@
                         ${allTimeSlots.map(t=>`<label><input type="checkbox" value="${t}"> ${t} – ${parseInt(t)+2}:00</label>`).join('')}
                     </div>
                 </div>
-                <button class="modal-btn btn-primary" id="doSearch">Искать</button>
+                <button class="modal-btn btn-primary" id="doSearch">Найти</button>
                 <div id="searchResults" style="margin-top:15px;max-height:200px;overflow-y:auto;"></div>
                 <button class="modal-btn btn-secondary" id="closeSearch">Закрыть</button>
             </div>
         `;
         document.body.appendChild(modal);
 
-        // Выпадающий список времён
         const timeDropdownBtn = modal.querySelector('#timeDropdownBtn');
         const timeDropdownOptions = modal.querySelector('#timeDropdownOptions');
         timeDropdownBtn.addEventListener('click', () => timeDropdownOptions.classList.toggle('show'));
-        modal.querySelector('#timeDropdownOptions').addEventListener('change', () => {
+        timeDropdownOptions.addEventListener('change', () => {
             const checked = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
-            timeDropdownBtn.textContent = checked.length ? checked.join(', ') : 'Выберите время';
+            timeDropdownBtn.textContent = checked.length ? checked.join(', ') : 'Не важно';
         });
         window.addEventListener('click', (e) => {
             if (!modal.querySelector('.time-dropdown').contains(e.target)) timeDropdownOptions.classList.remove('show');
@@ -948,99 +932,209 @@
         modal.querySelector('#closeSearch').addEventListener('click', ()=> modal.remove());
     });
 
-    // Чёрный список
-    blacklistBtn.addEventListener('click', ()=>{ blacklistModal.classList.add('active'); renderBlacklist(); });
-    document.getElementById('addBlacklistBtn').addEventListener('click', ()=>{
-        const phone = document.getElementById('newBlacklistPhone').value.trim();
-        if (phone && /^\d{11}$/.test(phone.replace(/\D/g,''))) {
-            db.collection('blacklist').doc(phone.replace(/\D/g,'')).set({});
-        } else showMessage('Введите 11 цифр номера');
+    // Остальные обработчики (чёрный список, админ-панель, навигация) без изменений...
+        // ========== ЧЁРНЫЙ СПИСОК ==========
+    blacklistBtn.addEventListener('click', () => {
+        blacklistModal.classList.add('active');
+        renderBlacklist();
     });
-    document.getElementById('closeBlacklistModal').addEventListener('click', ()=> blacklistModal.classList.remove('active'));
+
+    document.getElementById('addBlacklistBtn').addEventListener('click', () => {
+        const phone = document.getElementById('newBlacklistPhone').value.trim();
+        if (phone && /^\d{11}$/.test(phone.replace(/\D/g, ''))) {
+            db.collection('blacklist').doc(phone.replace(/\D/g, '')).set({});
+            document.getElementById('newBlacklistPhone').value = '';
+        } else {
+            showMessage('Введите номер из 11 цифр (например, 79161234567)');
+        }
+    });
+
+    document.getElementById('closeBlacklistModal').addEventListener('click', () => {
+        blacklistModal.classList.remove('active');
+    });
+
     function renderBlacklist() {
         const list = document.getElementById('blacklistList');
+        if (blacklist.length === 0) {
+            list.innerHTML = '<div style="color:#aaa; text-align:center; padding:20px;">Чёрный список пуст</div>';
+            return;
+        }
         list.innerHTML = blacklist.map(phone => `
-            <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);padding:8px;border-radius:10px;margin-bottom:5px; color:#ddd;">
+            <div style="display:flex; justify-content:space-between; align-items:center;
+                        background:rgba(255,255,255,0.05); padding:12px 15px; border-radius:12px;
+                        margin-bottom:8px; color:#ddd;">
                 <span>${phone}</span>
-                <button data-phone="${phone}" style="background:none;border:none;color:#ff7eb3;cursor:pointer;">✕</button>
+                <button data-phone="${phone}"
+                        style="background:none; border:none; color:#ff7eb3; cursor:pointer; font-size:1.2rem;
+                               transition: transform 0.2s;"
+                        onmouseover="this.style.transform='scale(1.2)'"
+                        onmouseout="this.style.transform='scale(1)'">✕</button>
             </div>
         `).join('');
-        list.querySelectorAll('button').forEach(btn => btn.addEventListener('click', ()=> db.collection('blacklist').doc(btn.dataset.phone).delete()));
-    }
-    db.collection('blacklist').onSnapshot(snap => { blacklist = snap.docs.map(d => d.id); });
 
-    // Админ-панель
+        list.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                db.collection('blacklist').doc(btn.dataset.phone).delete();
+            });
+        });
+    }
+
+    // Обновление чёрного списка в реальном времени
+    db.collection('blacklist').onSnapshot(snap => {
+        blacklist = snap.docs.map(d => d.id);
+        if (blacklistModal.classList.contains('active')) {
+            renderBlacklist();
+        }
+    });
+
+    // ========== АДМИН-ПАНЕЛЬ ==========
     function renderAdminBookings() {
-        if (!isAdmin) { adminBookings.style.display = 'none'; return; }
+        if (!isAdmin) {
+            adminBookings.style.display = 'none';
+            return;
+        }
         adminBookings.style.display = 'block';
-        const now = new Date(); now.setHours(0,0,0,0);
-        let items = '';
-        Object.keys(appointments).sort().forEach(dk => {
-            const [y,m,d] = dk.split('-').map(Number);
-            const date = new Date(y,m-1,d);
-            if (date < now) return;
-            appointments[dk].forEach(app => {
-                const end = `${parseInt(app.time)+2}:00`;
-                items += `<div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.05);padding:10px;border-radius:12px;margin-bottom:8px; color:#ddd;">
-                    <div>
-                        <div style="color:#ff7eb3;">${date.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'})}</div>
-                        <div>${app.time}-${end} | ${app.name} (${app.phone})</div>
-                        ${app.note ? `<div style="color:#aaa;">📝 ${app.note}</div>` : ''}
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        // Собираем все будущие записи
+        const allBookings = [];
+        Object.keys(appointments).sort().forEach(dateKey => {
+            const [y, m, d] = dateKey.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            if (date >= now) {
+                appointments[dateKey].forEach(app => {
+                    allBookings.push({
+                        ...app,
+                        date: date,
+                        dateKey: dateKey
+                    });
+                });
+            }
+        });
+
+        if (allBookings.length === 0) {
+            bookingsContainer.innerHTML = '<div style="color:#aaa; text-align:center; padding:30px;">Нет будущих записей</div>';
+            return;
+        }
+
+        let html = '';
+        allBookings
+            .sort((a, b) => a.date - b.date)
+            .forEach(app => {
+                const dateStr = app.date.toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    weekday: 'short'
+                });
+                const endTime = `${parseInt(app.time) + 2}:00`;
+
+                html += `
+                <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:15px;
+                            margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;
+                            border-left: 3px solid #ff7eb3; transition: all 0.2s;"
+                     onmouseover="this.style.background='rgba(255,126,179,0.1)'"
+                     onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    <div style="flex:1;">
+                        <div style="color:#ff7eb3; font-weight:600; margin-bottom:5px;">${dateStr}</div>
+                        <div style="color:#ddd;">
+                            <span style="background:rgba(255,126,179,0.2); padding:2px 10px; border-radius:10px;">
+                                ${app.time} – ${endTime}
+                            </span>
+                        </div>
+                        <div style="margin-top:8px; color:#eee;">
+                            👤 ${app.name}
+                            <span style="color:#aaa; margin-left:10px;">📱 ${app.phone}</span>
+                        </div>
+                        ${app.note ? `<div style="color:#aaa; margin-top:5px; font-style:italic;">📝 ${app.note}</div>` : ''}
+                        ${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#ff7eb3; display:inline-block; margin-top:5px;">📎 Посмотреть дизайн</a>` : ''}
                     </div>
-                    <button class="delete-btn" data-docid="${app.docId}" style="background:#e74c3c;color:white;border:none;border-radius:15px;padding:5px 15px;cursor:pointer;">✕</button>
+                    <button class="delete-btn" data-docid="${app.docId}"
+                            style="background:#e74c3c; color:white; border:none; border-radius:50%;
+                                   width:35px; height:35px; font-size:1.2rem; cursor:pointer;
+                                   transition: all 0.3s; flex-shrink:0; margin-left:15px;"
+                            onmouseover="this.style.transform='scale(1.1)'"
+                            onmouseout="this.style.transform='scale(1)'">✕</button>
                 </div>`;
             });
-        });
-        bookingsContainer.innerHTML = items || '<p style="color:#ddd;">Нет будущих записей</p>';
+
+        bookingsContainer.innerHTML = html;
+
+        // Обработчики удаления с модальным подтверждением
         document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const modal = document.createElement('div');
-                modal.className = 'modal active';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <p style="color:#ddd;">Удалить эту запись?</p>
-                        <button class="modal-btn btn-primary" id="confirmDelete">Да</button>
-                        <button class="modal-btn btn-secondary close-confirm">Нет</button>
+            btn.addEventListener('click', function () {
+                const docId = this.dataset.docid;
+                const confirmModal = document.createElement('div');
+                confirmModal.className = 'modal active';
+                confirmModal.innerHTML = `
+                    <div class="modal-content" style="max-width:350px;">
+                        <h3 style="color:#ff7eb3;">Подтверждение</h3>
+                        <p style="color:#ddd; margin:20px 0;">Вы действительно хотите удалить эту запись?</p>
+                        <div style="display:flex; gap:10px; justify-content:flex-end;">
+                            <button class="modal-btn btn-secondary cancel-delete">Отмена</button>
+                            <button class="modal-btn btn-primary confirm-delete">Удалить</button>
+                        </div>
                     </div>
                 `;
-                document.body.appendChild(modal);
-                modal.querySelector('#confirmDelete').addEventListener('click', async () => {
-                    await db.collection('appointments').doc(this.dataset.docid).delete();
-                    modal.remove();
+                document.body.appendChild(confirmModal);
+
+                confirmModal.querySelector('.confirm-delete').addEventListener('click', async () => {
+                    await db.collection('appointments').doc(docId).delete();
+                    confirmModal.remove();
                 });
-                modal.querySelector('.close-confirm').addEventListener('click', () => modal.remove());
+
+                confirmModal.querySelector('.cancel-delete').addEventListener('click', () => {
+                    confirmModal.remove();
+                });
             });
         });
     }
 
+    // Обновление выходных дней
     db.collection('daysOff').onSnapshot(snap => {
         daysOff = snap.docs.map(d => d.id);
         updateMasterPanelButtons();
     });
+
+    // Обновление записей в реальном времени
     db.collection('appointments').onSnapshot(snap => {
         appointments = {};
         snap.forEach(doc => {
             const data = doc.data();
             const dateKey = doc.id.split('_')[0];
             if (!appointments[dateKey]) appointments[dateKey] = [];
-            appointments[dateKey].push({...data, docId: doc.id});
+            appointments[dateKey].push({ ...data, docId: doc.id });
         });
         renderAll();
         if (isAdmin) renderAdminBookings();
     });
 
-    document.getElementById('prevMonth').addEventListener('click', ()=>{
-        currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;}
-        selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
-        renderAll();
-    });
-    document.getElementById('nextMonth').addEventListener('click', ()=>{
-        currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;}
-        selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
+    // ========== НАВИГАЦИЯ ПО МЕСЯЦАМ ==========
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        selectedDate = null;
+        selectedTime = null;
+        multiSelectMode = false;
+        selectedDaysSet.clear();
         renderAll();
     });
 
-    initializeAuth();
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        selectedDate = null;
+        selectedTime = null;
+        multiSelectMode = false;
+        selectedDaysSet.clear();
+        renderAll();
+    });
 </script>
 </body>
 </html>
