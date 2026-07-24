@@ -689,7 +689,9 @@
         }
 
         function updateUIForSelectedDate() {
-            if (!selectedDate) {
+            if (true) {
+                console.log('=== updateUIForSelectedDate ===');
+                console.log('isAdmin:', isAdmin, 'selectedDate:', selectedDate);
                 selectedDateDisplay.innerHTML = '<span>📅 Дата не выбрана</span>';
                 timeSelectionArea.style.display = 'none';
                 bookingFormArea.style.display = 'none';
