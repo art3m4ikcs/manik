@@ -202,8 +202,15 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10,10,20,0.95); backdrop-filter: blur(15px);
             display: flex; justify-content: center; align-items: center;
-            z-index: 300; /* Выше всех */
+            z-index: 300;
         }
+        .tab-buttons { display: flex; margin-bottom: 20px; }
+        .tab-btn {
+            flex: 1; padding: 10px; border-radius: 20px; border: none;
+            font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+        }
+        .tab-btn.active { background: linear-gradient(135deg, #ff7eb3, #ff758c); color: white; }
+        .tab-btn:not(.active) { background: rgba(255,255,255,0.1); color: #ccc; }
     </style>
 </head>
 <body>
@@ -215,12 +222,11 @@
 <!-- Экран входа (обязательный) -->
 <div class="login-screen" id="loginScreen">
     <div class="modal-content" style="max-width: 400px;">
-        <div style="display: flex; margin-bottom: 20px;">
-            <button id="showLoginTab" class="modal-btn btn-primary active" style="flex:1; border-radius: 20px 0 0 20px;">Войти</button>
-            <button id="showRegisterTab" class="modal-btn btn-secondary" style="flex:1; border-radius: 0 20px 20px 0;">Регистрация</button>
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="showLoginTab">Войти</button>
+            <button class="tab-btn" id="showRegisterTab">Регистрация</button>
         </div>
 
-        <!-- Форма входа -->
         <div id="loginForm">
             <input type="email" id="loginEmail" placeholder="Email" required>
             <input type="password" id="loginPassword" placeholder="Пароль" required>
@@ -228,7 +234,6 @@
             <a href="#" id="forgotPasswordLink" style="color:#ff7eb3; display:block; text-align:center; margin-top:10px; font-size:0.9rem;">Забыли пароль?</a>
         </div>
 
-        <!-- Форма регистрации (изначально скрыта) -->
         <div id="registerForm" style="display:none;">
             <input type="email" id="registerEmail" placeholder="Email" required>
             <input type="password" id="registerPassword" placeholder="Пароль" required>
@@ -238,7 +243,6 @@
 
         <p id="loginError" style="color:#ff7eb3; margin-top:10px; display:none; text-align:center;"></p>
     </div>
-</div>
 </div>
 
 <div class="app-container" id="appContainer">
@@ -289,7 +293,7 @@
     </div>
 </div>
 
-<!-- Модальные окна (сообщение, чат, чёрный список) -->
+<!-- Модальные окна -->
 <div class="modal" id="messageModal">
     <div class="modal-content">
         <p id="messageText" style="color:#ddd;"></p>
@@ -322,6 +326,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 
 <script>
     // ⚠️ ЗАМЕНИТЕ НА ВАШИ КЛЮЧИ
@@ -331,7 +336,7 @@
         projectId: "manik-56a31",
         storageBucket: "manik-56a31.firebasestorage.app",
         messagingSenderId: "540265958043",
-        appId: "1:540265958043:web:f3dd0d7ee6b9c9ffbe543e"
+        appId: "1:540265958043:web:f3dd0d7ee6b9c9ffbe543e",
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -339,9 +344,7 @@
     const storage = firebase.storage();
     db.enablePersistence().catch(() => {});
 
-    // ⚠️ Вставьте ваш OpenAI API ключ (если хотите реальный ИИ), иначе будет заглушка
-    const OPENAI_KEY = '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';
-
+    // Глобальные переменные
     let masterKey = null;
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
@@ -355,16 +358,11 @@
     let firstLoadCompleted = false;
     let currentUser = null;
 
-    // DOM
+    // DOM элементы
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('appContainer');
     const loginScreen = document.getElementById('loginScreen');
-    const loginEmail = document.getElementById('loginEmail');
-    const loginPassword = document.getElementById('loginPassword');
-    const masterKeyInput = document.getElementById('masterKeyInput');
-    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
     const loginError = document.getElementById('loginError');
-
     const dropdownMenu = document.getElementById('dropdownMenu');
     const menuBtn = document.getElementById('menuBtn');
     const archiveBtn = document.getElementById('archiveBtn');
@@ -373,7 +371,6 @@
     const searchWindowBtn = document.getElementById('searchWindowBtn');
     const blacklistBtn = document.getElementById('blacklistBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-
     const mainPage = document.getElementById('mainPage');
     const monthYearEl = document.getElementById('monthYear');
     const daysGridEl = document.getElementById('daysGrid');
@@ -397,171 +394,25 @@
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-    // Загрузка мастер-ключа
+    // Выпадающее меню
+    menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+    });
+    window.addEventListener('click', () => dropdownMenu.classList.remove('show'));
+
+    // Универсальное сообщение
+    function showMessage(text) {
+        document.getElementById('messageText').textContent = text;
+        messageModal.classList.add('active');
+    }
+    document.getElementById('closeMessageModal').addEventListener('click', () => messageModal.classList.remove('active'));
+
+    // Загрузка данных
     async function loadMasterKey() {
         const doc = await db.collection('settings').doc('masterKey').get();
         masterKey = doc.exists ? doc.data().key : null;
     }
-
-    // Показать/скрыть экран входа
-    function showLoginScreen() {
-        loginScreen.style.display = 'flex';
-        appContainer.classList.remove('visible');
-        loader.classList.add('hidden');
-    }
-    function hideLoginScreen() {
-        loginScreen.style.display = 'none';
-    }
-
-    // Выход
-    function logout() {
-        auth.signOut();
-        localStorage.removeItem('isAdmin');
-        // После выхода onAuthStateChanged сам вызовет showLoginScreen
-    }
-
-    // Инициализация после загрузки ключа
-        // ---------- АВТОРИЗАЦИЯ (С РЕГИСТРАЦИЕЙ) ----------
-
-    // Загрузка мастер-ключа из Firestore
-    async function loadMasterKey() {
-        const doc = await db.collection('settings').doc('masterKey').get();
-        masterKey = doc.exists ? doc.data().key : null;
-    }
-
-    // Показать/скрыть экран входа
-    function showLoginScreen() {
-        loginScreen.style.display = 'flex';
-        appContainer.classList.remove('visible');
-        loader.classList.add('hidden');
-    }
-    function hideLoginScreen() {
-        loginScreen.style.display = 'none';
-    }
-
-    // Выход
-    function logout() {
-        auth.signOut();
-        hideLoginScreen();
-        showLoginScreen();
-    }
-
-    // Инициализация после загрузки ключа
-    async function initializeAuth() {
-        await loadMasterKey();
-
-        // Подписка на состояние авторизации
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                currentUser = null;
-                isAdmin = false;
-                showLoginScreen();
-                return;
-            }
-            currentUser = user;
-            // Проверяем, является ли пользователь мастером (по наличию в коллекции masters)
-            const masterDoc = await db.collection('masters').doc(user.uid).get();
-            isAdmin = masterDoc.exists;
-            hideLoginScreen();
-            if (!firstLoadCompleted) {
-                await loadData();
-                await loadBlacklist();
-                firstLoadCompleted = true;
-                finishLoading();
-            }
-            updateUIForRole();
-            renderAll();
-            if (isAdmin) renderAdminBookings();
-        });
-
-        // Переключение вкладок
-        document.getElementById('showLoginTab').addEventListener('click', () => {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('showLoginTab').classList.add('active');
-            document.getElementById('showRegisterTab').classList.remove('active');
-        });
-        document.getElementById('showRegisterTab').addEventListener('click', () => {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-            document.getElementById('showRegisterTab').classList.add('active');
-            document.getElementById('showLoginTab').classList.remove('active');
-        });
-
-        // Вход
-        document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-            if (!email || !password) {
-                loginError.textContent = 'Введите email и пароль';
-                loginError.style.display = 'block';
-                return;
-            }
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                // onAuthStateChanged сам скроет экран и определит роль
-            } catch (err) {
-                loginError.textContent = 'Ошибка: ' + err.message;
-                loginError.style.display = 'block';
-            }
-        });
-
-        // Регистрация
-        document.getElementById('registerSubmitBtn').addEventListener('click', async () => {
-            const email = document.getElementById('registerEmail').value.trim();
-            const password = document.getElementById('registerPassword').value.trim();
-            if (!email || !password) {
-                loginError.textContent = 'Введите email и пароль';
-                loginError.style.display = 'block';
-                return;
-            }
-            try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                // Проверяем ключ мастера
-                const enteredKey = document.getElementById('registerMasterKey').value.trim();
-                if (enteredKey === masterKey) {
-                    await db.collection('masters').doc(user.uid).set({ email: user.email });
-                    isAdmin = true;
-                } else {
-                    isAdmin = false;
-                }
-                // После регистрации сразу авторизованы, onAuthStateChanged сработает
-            } catch (err) {
-                loginError.textContent = 'Ошибка: ' + err.message;
-                loginError.style.display = 'block';
-            }
-        });
-
-        // Забыли пароль
-        document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const email = prompt('Введите ваш email для восстановления пароля:');
-            if (!email) return;
-            try {
-                await auth.sendPasswordResetEmail(email);
-                showMessage('Письмо для сброса пароля отправлено на ' + email);
-            } catch (err) {
-                showMessage('Ошибка: ' + err.message);
-            }
-        });
-
-        // Выход из меню
-        logoutBtn.addEventListener('click', logout);
-    }
-
-    // Запуск инициализации
-    initializeAuth();
-
-        // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
-    function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-    function isToday(d) { const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
-    function isDayOff(dk) { return daysOff.includes(dk); }
-    function getBookedSlotsForDate(d) { const k=formatDateKey(d); return appointments[k] ? appointments[k].map(a=>a.time) : []; }
-    function isPastSlot(d,time) { if(!isToday(d)) return false; const [h,m]=time.split(':').map(Number); const end=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h+2,m); return end <= new Date(); }
-    function isDateInPast(d) { const tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1); tomorrow.setHours(0,0,0,0); return new Date(d.getFullYear(),d.getMonth(),d.getDate()) < tomorrow; }
-
-    // ---------- ЗАГРУЗКА ДАННЫХ ----------
     async function loadData() {
         const [daysSnap, apptSnap] = await Promise.all([
             db.collection('daysOff').get(),
@@ -582,7 +433,140 @@
         });
     }
 
-    // ---------- ОТОБРАЖЕНИЕ КАЛЕНДАРЯ ----------
+    // Авторизация
+    function showLoginScreen() {
+        loginScreen.style.display = 'flex';
+        appContainer.classList.remove('visible');
+        loader.classList.add('hidden');
+    }
+    function hideLoginScreen() {
+        loginScreen.style.display = 'none';
+    }
+    function logout() {
+        auth.signOut();
+        hideLoginScreen();
+        showLoginScreen();
+    }
+
+    async function initializeAuth() {
+        await loadMasterKey();
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                currentUser = null;
+                isAdmin = false;
+                showLoginScreen();
+                return;
+            }
+            currentUser = user;
+            const masterDoc = await db.collection('masters').doc(user.uid).get();
+            isAdmin = masterDoc.exists;
+            hideLoginScreen();
+            if (!firstLoadCompleted) {
+                await loadData();
+                await loadBlacklist();
+                firstLoadCompleted = true;
+                finishLoading();
+            }
+            updateUIForRole();
+            renderAll();
+            if (isAdmin) renderAdminBookings();
+        });
+
+        document.getElementById('showLoginTab').addEventListener('click', () => {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('showLoginTab').classList.add('active');
+            document.getElementById('showRegisterTab').classList.remove('active');
+        });
+        document.getElementById('showRegisterTab').addEventListener('click', () => {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('showRegisterTab').classList.add('active');
+            document.getElementById('showLoginTab').classList.remove('active');
+        });
+
+        document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            if (!email || !password) {
+                loginError.textContent = 'Введите email и пароль';
+                loginError.style.display = 'block';
+                return;
+            }
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (err) {
+                loginError.textContent = 'Ошибка: ' + err.message;
+                loginError.style.display = 'block';
+            }
+        });
+
+        document.getElementById('registerSubmitBtn').addEventListener('click', async () => {
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value.trim();
+            if (!email || !password) {
+                loginError.textContent = 'Введите email и пароль';
+                loginError.style.display = 'block';
+                return;
+            }
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                const enteredKey = document.getElementById('registerMasterKey').value.trim();
+                if (enteredKey === masterKey) {
+                    await db.collection('masters').doc(user.uid).set({ email: user.email });
+                }
+            } catch (err) {
+                loginError.textContent = 'Ошибка: ' + err.message;
+                loginError.style.display = 'block';
+            }
+        });
+
+        document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = prompt('Введите ваш email для восстановления пароля:');
+            if (!email) return;
+            try {
+                await auth.sendPasswordResetEmail(email);
+                showMessage('Письмо для сброса пароля отправлено на ' + email);
+            } catch (err) {
+                showMessage('Ошибка: ' + err.message);
+            }
+        });
+
+        logoutBtn.addEventListener('click', logout);
+    }
+
+    function finishLoading() {
+        setTimeout(() => {
+            loader.classList.add('hidden');
+            appContainer.classList.add('visible');
+        }, 500);
+    }
+
+    function updateUIForRole() {
+        blacklistBtn.style.display = isAdmin ? 'inline-block' : 'none';
+        if (!isAdmin) {
+            adminBookings.style.display = 'none';
+            dayOffControl.innerHTML = '';
+        } else {
+            if (selectedDate) updateDayOffButton();
+            renderAdminBookings();
+        }
+    }
+
+    initializeAuth();
+
+    // Продолжение (календарь, запись, чат, архив и т.д.) будет во второй части.
+        // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+    function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function isToday(d) { const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
+    function isDayOff(dk) { return daysOff.includes(dk); }
+    function getBookedSlotsForDate(d) { const k=formatDateKey(d); return appointments[k] ? appointments[k].map(a=>a.time) : []; }
+    function isPastSlot(d,time) { if(!isToday(d)) return false; const [h,m]=time.split(':').map(Number); const end=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h+2,m); return end <= new Date(); }
+    function isDateInPast(d) { const tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1); tomorrow.setHours(0,0,0,0); return new Date(d.getFullYear(),d.getMonth(),d.getDate()) < tomorrow; }
+
     function renderAll() {
         renderCalendar();
         if (selectedDate) {
@@ -593,6 +577,7 @@
         }
     }
 
+    // ---------- КАЛЕНДАРЬ ----------
     function renderCalendar() {
         monthYearEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -715,7 +700,7 @@
         }
         try {
             await db.collection('appointments').doc(`${dk}_${selectedTime}`).set({
-                time: selectedTime, name, phone, note, designUrl, userId: currentUser?.uid || 'unknown'
+                time: selectedTime, name, phone, note, designUrl, userId: currentUser?.uid || 'anon'
             });
             clientNameInput.value = ''; clientPhoneInput.value = ''; clientNoteInput.value = '';
             designFileInput.value = ''; selectedTime = null;
@@ -737,29 +722,23 @@
         return null;
     }
 
-    // ---------- ИИ ЧАТ ----------
+    // ---------- ИИ ЧАТ (заглушка) ----------
     aiChatBtn.addEventListener('click', () => aiChatModal.classList.add('active'));
     document.getElementById('closeAiChatBtn').addEventListener('click', () => aiChatModal.classList.remove('active'));
     document.getElementById('sendChatBtn').addEventListener('click', sendChat);
     chatInput.addEventListener('keypress', (e) => { if (e.key==='Enter') sendChat(); });
+
     function sendChat() {
         const msg = chatInput.value.trim();
         if (!msg) return;
         addChatMessage('user', msg);
         chatInput.value = '';
-        if (OPENAI_KEY) {
-            fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
-                body: JSON.stringify({ model: 'gpt-3.5-turbo', messages: [{role:'system', content:'Ты эксперт по маникюру. Помоги клиенту выбрать дизайн, форму, цвет. Отвечай кратко.'}, {role:'user', content: msg}] })
-            })
-            .then(r => r.json())
-            .then(data => addChatMessage('bot', data.choices?.[0]?.message?.content || 'Ответ не получен'))
-            .catch(() => addChatMessage('bot', 'Ошибка запроса к ИИ.'));
-        } else {
-            setTimeout(() => addChatMessage('bot', 'Я рекомендую попробовать нежно-розовый френч с блестками! ✨'), 500);
-        }
+        // Заглушка (без OpenAI ключа)
+        setTimeout(() => {
+            addChatMessage('bot', 'Попробуйте нежно-розовый френч с блестками! ✨');
+        }, 500);
     }
+
     function addChatMessage(type, text) {
         const div = document.createElement('div');
         div.className = `message ${type==='user'?'user-message':'bot-message'}`;
@@ -768,7 +747,7 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ---------- АРХИВ (МОДАЛЬНОЕ ОКНО) ----------
+    // ---------- АРХИВ ----------
     const archiveModal = document.createElement('div');
     archiveModal.className = 'modal';
     archiveModal.id = 'archiveModal';
@@ -886,7 +865,6 @@
             });
         });
     }
-
     archiveBtn.addEventListener('click', () => {
         if (isAdmin) {
             openArchive();
@@ -979,7 +957,7 @@
         blacklist = snap.docs.map(d => d.id);
     });
 
-    // ---------- АДМИН-ПАНЕЛЬ (ВЫХОДНЫЕ, УДАЛЕНИЕ) ----------
+    // ---------- АДМИН-ПАНЕЛЬ (УДАЛЕНИЕ ЗАПИСЕЙ) ----------
     function renderAdminBookings() {
         if (!isAdmin) { adminBookings.style.display = 'none'; return; }
         adminBookings.style.display = 'block';
@@ -1044,26 +1022,6 @@
         selectedDate = null; selectedTime = null;
         renderAll();
     });
-
-    // ---------- УНИВЕРСАЛЬНОЕ СООБЩЕНИЕ ----------
-    function showMessage(text) {
-        document.getElementById('messageText').textContent = text;
-        messageModal.classList.add('active');
-    }
-    document.getElementById('closeMessageModal').addEventListener('click', () => messageModal.classList.remove('active'));
-
-    // Функция обновления интерфейса в зависимости от роли
-    function updateUIForRole() {
-        blacklistBtn.style.display = isAdmin ? 'inline-block' : 'none';
-        if (!isAdmin) {
-            adminBookings.style.display = 'none';
-            dayOffControl.innerHTML = '';
-        } else {
-            if (selectedDate) updateDayOffButton();
-            renderAdminBookings();
-        }
-    }
-
 </script>
 </body>
 </html>
