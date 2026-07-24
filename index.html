@@ -91,6 +91,36 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .calendar-wrapper {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            transition: all 0.4s ease;
+        }
+        .calendar-wrapper.shifted .calendar-main {
+            flex: 0 0 60%;
+        }
+        .calendar-main {
+            flex: 1;
+            transition: all 0.4s ease;
+        }
+        .master-panel {
+            display: none;
+            flex: 1;
+            background: rgba(255,126,179,0.05);
+            border-radius: 20px;
+            padding: 15px;
+            border: 1px solid rgba(255,126,179,0.2);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.4s ease;
+        }
+        .calendar-wrapper.shifted .master-panel {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin: 20px 0; }
         .month-year {
             font-size: 1.5rem; font-weight: 600; color: #ff7eb3;
@@ -109,8 +139,8 @@
         .day-cell {
             aspect-ratio: 1/1; background: rgba(255,255,255,0.05); border-radius: 15px;
             display: flex; align-items: center; justify-content: center; font-weight: 500;
-            color: #ccc; cursor: pointer; transition: all 0.3s ease; border: 1px solid transparent;
-            animation: fadeInCell 0.4s ease backwards;
+            color: #ddd; cursor: pointer; transition: all 0.3s ease; border: 1px solid transparent;
+            animation: fadeInCell 0.4s ease backwards; position: relative;
         }
         @keyframes fadeInCell {
             from { opacity: 0; transform: scale(0.7); }
@@ -127,7 +157,21 @@
         }
         .day-cell.other-month { color: #555; opacity: 0.4; cursor: default; }
         .day-cell.day-off { background: rgba(100,100,100,0.2); color: #888; text-decoration: line-through; }
-        .day-cell.has-appointments::before { content: ''; position: absolute; bottom: 4px; width: 6px; height: 6px; background: #ff7eb3; border-radius: 50%; }
+        /* Точка занятости – яркая и не перекрывается */
+        .day-cell.has-appointments::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            background: #ff7eb3;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #ff7eb3;
+        }
+        .day-cell.day-off.has-appointments::after {
+            background: #ff7eb3; /* на выходных тоже показываем */
+        }
 
         .time-slots { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -188,7 +232,7 @@
             cursor: pointer; border: none; margin: 5px; transition: all 0.3s ease;
         }
         .btn-primary { background: linear-gradient(135deg, #ff7eb3, #ff758c); color: white; box-shadow: 0 5px 20px rgba(255,126,179,0.5); }
-        .btn-secondary { background: rgba(255,255,255,0.1); color: #ccc; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #ddd; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,126,179,0.7); }
         .btn-secondary:hover { background: rgba(255,255,255,0.2); }
 
@@ -197,7 +241,6 @@
         .user-message { background: rgba(255,126,179,0.3); margin-left: auto; color: white; }
         .bot-message { background: rgba(255,255,255,0.1); margin-right: auto; color: #ddd; }
 
-        /* Экран входа */
         .login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10,10,20,0.95); backdrop-filter: blur(15px);
@@ -214,12 +257,13 @@
     </style>
 </head>
 <body>
+<!-- Экран загрузки -->
 <div class="loader-container" id="loader">
     <div class="spinner"></div>
     <div class="loader-text">Manik загружается...</div>
 </div>
 
-<!-- Экран входа (обязательный) -->
+<!-- Экран входа -->
 <div class="login-screen" id="loginScreen">
     <div class="modal-content" style="max-width: 400px;">
         <div class="tab-buttons">
@@ -262,34 +306,49 @@
     </div>
 
     <div id="mainPage">
-        <div class="calendar-header">
-            <button class="nav-btn" id="prevMonth">◀</button>
-            <span class="month-year" id="monthYear"></span>
-            <button class="nav-btn" id="nextMonth">▶</button>
+        <div class="calendar-wrapper" id="calendarWrapper">
+            <div class="calendar-main">
+                <div class="calendar-header">
+                    <button class="nav-btn" id="prevMonth">◀</button>
+                    <span class="month-year" id="monthYear"></span>
+                    <button class="nav-btn" id="nextMonth">▶</button>
+                </div>
+                <div class="weekdays">
+                    <span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span>
+                </div>
+                <div class="days-grid" id="daysGrid"></div>
+                <div style="background:rgba(255,126,179,0.1);border-radius:20px;padding:15px;margin:15px 0;color:#ff7eb3;" id="selectedDateDisplay">
+                    📅 Дата не выбрана
+                </div>
+                <div id="timeSelectionArea" style="display:none;">
+                    <div style="font-weight:600;color:#ff7eb3;margin-bottom:8px;">Доступное время (2 часа):</div>
+                    <div class="time-slots" id="timeSlotsContainer"></div>
+                </div>
+                <div id="bookingFormArea" style="display:none;" class="booking-form">
+                    <input type="text" id="clientName" placeholder="Ваше имя">
+                    <input type="tel" id="clientPhone" placeholder="Телефон (11 цифр)">
+                    <textarea id="clientNote" placeholder="Заметка (необязательно)" rows="2"></textarea>
+                    <input type="file" id="designFile" accept="image/*" style="display:none;">
+                    <button class="book-btn" id="bookBtn">Записаться</button>
+                </div>
+            </div>
+            <!-- Панель мастера (появляется при выборе дня) -->
+            <div class="master-panel" id="masterPanel">
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="modal-btn btn-primary" id="toggleDayOffBtn">Сделать выходным</button>
+                    <button class="modal-btn btn-secondary" id="multiSelectBtn">✎ Выбрать несколько</button>
+                </div>
+                <div style="margin-top:15px; display:none;" id="multiActions">
+                    <button class="modal-btn btn-primary" id="applyMultiOffBtn" style="margin-right:5px;">Сделать выходными</button>
+                    <button class="modal-btn btn-secondary" id="applyMultiWorkBtn">Сделать рабочими</button>
+                </div>
+            </div>
         </div>
-        <div class="weekdays">
-            <span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span>
-        </div>
-        <div class="days-grid" id="daysGrid"></div>
-        <div style="background:rgba(255,126,179,0.1);border-radius:20px;padding:15px;margin:15px 0;color:#ff7eb3;" id="selectedDateDisplay">
-            📅 Дата не выбрана
-        </div>
-        <div id="timeSelectionArea" style="display:none;">
-            <div style="font-weight:600;color:#ff7eb3;margin-bottom:8px;">Доступное время (2 часа):</div>
-            <div class="time-slots" id="timeSlotsContainer"></div>
-        </div>
-        <div id="bookingFormArea" style="display:none;" class="booking-form">
-            <input type="text" id="clientName" placeholder="Ваше имя">
-            <input type="tel" id="clientPhone" placeholder="Телефон (11 цифр)">
-            <textarea id="clientNote" placeholder="Заметка (необязательно)" rows="2"></textarea>
-            <input type="file" id="designFile" accept="image/*" style="display:none;">
-            <button class="book-btn" id="bookBtn">Записаться</button>
-        </div>
+
         <div id="adminBookings" style="display:none;margin-top:30px;background:rgba(255,126,179,0.05);border-radius:20px;padding:20px;">
             <h2 style="color:#ff7eb3;">Все записи</h2>
             <div id="bookingsContainer"></div>
         </div>
-        <div id="dayOffControl" style="margin-top:10px;text-align:center;"></div>
     </div>
 </div>
 
@@ -331,12 +390,12 @@
 <script>
     // ⚠️ ЗАМЕНИТЕ НА ВАШИ КЛЮЧИ
     const firebaseConfig = {
-        apiKey: "AIzaSyCetvGM77zUc_Llh5p-FLTF6PkvH-lCPQ8",
-        authDomain: "manik-56a31.firebaseapp.com",
-        projectId: "manik-56a31",
-        storageBucket: "manik-56a31.firebasestorage.app",
-        messagingSenderId: "540265958043",
-        appId: "1:540265958043:web:f3dd0d7ee6b9c9ffbe543e",
+        apiKey: "AIzaSy...",
+        authDomain: "your-project.firebaseapp.com",
+        projectId: "your-project",
+        storageBucket: "your-project.appspot.com",
+        messagingSenderId: "000000000000",
+        appId: "1:000000000000:web:abc123"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -344,13 +403,14 @@
     const storage = firebase.storage();
     db.enablePersistence().catch(() => {});
 
-    // Глобальные переменные
     let masterKey = null;
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
     let selectedDate = null;
     let selectedTime = null;
     let isAdmin = false;
+    let multiSelectMode = false;
+    let selectedDaysSet = new Set();
     let appointments = {};
     let daysOff = [];
     let blacklist = [];
@@ -372,6 +432,13 @@
     const blacklistBtn = document.getElementById('blacklistBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const mainPage = document.getElementById('mainPage');
+    const calendarWrapper = document.getElementById('calendarWrapper');
+    const masterPanel = document.getElementById('masterPanel');
+    const toggleDayOffBtn = document.getElementById('toggleDayOffBtn');
+    const multiSelectBtn = document.getElementById('multiSelectBtn');
+    const applyMultiOffBtn = document.getElementById('applyMultiOffBtn');
+    const applyMultiWorkBtn = document.getElementById('applyMultiWorkBtn');
+    const multiActions = document.getElementById('multiActions');
     const monthYearEl = document.getElementById('monthYear');
     const daysGridEl = document.getElementById('daysGrid');
     const selectedDateDisplay = document.getElementById('selectedDateDisplay');
@@ -385,7 +452,6 @@
     const designFileInput = document.getElementById('designFile');
     const adminBookings = document.getElementById('adminBookings');
     const bookingsContainer = document.getElementById('bookingsContainer');
-    const dayOffControl = document.getElementById('dayOffControl');
     const messageModal = document.getElementById('messageModal');
     const aiChatModal = document.getElementById('aiChatModal');
     const blacklistModal = document.getElementById('blacklistModal');
@@ -394,21 +460,18 @@
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-    // Выпадающее меню
     menuBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         dropdownMenu.classList.toggle('show');
     });
     window.addEventListener('click', () => dropdownMenu.classList.remove('show'));
 
-    // Универсальное сообщение
     function showMessage(text) {
         document.getElementById('messageText').textContent = text;
         messageModal.classList.add('active');
     }
     document.getElementById('closeMessageModal').addEventListener('click', () => messageModal.classList.remove('active'));
 
-    // Загрузка данных
     async function loadMasterKey() {
         const doc = await db.collection('settings').doc('masterKey').get();
         masterKey = doc.exists ? doc.data().key : null;
@@ -549,17 +612,14 @@
         blacklistBtn.style.display = isAdmin ? 'inline-block' : 'none';
         if (!isAdmin) {
             adminBookings.style.display = 'none';
-            dayOffControl.innerHTML = '';
+            calendarWrapper.classList.remove('shifted');
         } else {
-            if (selectedDate) updateDayOffButton();
+            if (selectedDate) updateMasterPanel();
             renderAdminBookings();
         }
     }
 
-    initializeAuth();
-
-    // Продолжение (календарь, запись, чат, архив и т.д.) будет во второй части.
-        // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+    // Функции календаря и мастер-панели
     function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
     function isToday(d) { const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
     function isDayOff(dk) { return daysOff.includes(dk); }
@@ -571,13 +631,12 @@
         renderCalendar();
         if (selectedDate) {
             updateUIForSelectedDate();
-            updateDayOffButton();
+            if (isAdmin) updateMasterPanel();
         } else {
-            dayOffControl.innerHTML = '';
+            if (isAdmin) calendarWrapper.classList.remove('shifted');
         }
     }
 
-    // ---------- КАЛЕНДАРЬ ----------
     function renderCalendar() {
         monthYearEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -590,7 +649,8 @@
             const dk = formatDateKey(date);
             let cls = 'day-cell';
             if (isToday(date)) cls += ' today';
-            if (selectedDate && formatDateKey(selectedDate)===dk) cls += ' selected';
+            if (selectedDate && !multiSelectMode && formatDateKey(selectedDate)===dk) cls += ' selected';
+            if (multiSelectMode && selectedDaysSet.has(dk)) cls += ' selected-multi';
             if (isDayOff(dk)) cls += ' day-off';
             if (appointments[dk]?.length) cls += ' has-appointments';
             html += `<div class="${cls}" data-date="${dk}" style="animation-delay:${d*0.02}s">${d}</div>`;
@@ -602,18 +662,25 @@
         document.querySelectorAll('.day-cell[data-date]').forEach(cell => {
             cell.addEventListener('click', function() {
                 const dk = this.dataset.date;
+                if (multiSelectMode && isAdmin) {
+                    if (selectedDaysSet.has(dk)) selectedDaysSet.delete(dk);
+                    else selectedDaysSet.add(dk);
+                    renderCalendar();
+                    updateMasterPanel();
+                    return;
+                }
                 const [y,m,d] = dk.split('-').map(Number);
                 selectedDate = new Date(y,m-1,d);
                 selectedTime = null;
                 updateUIForSelectedDate();
-                updateDayOffButton();
+                updateMasterPanel();
                 renderCalendar();
             });
         });
     }
 
     function updateUIForSelectedDate() {
-        if (!selectedDate) {
+        if (!selectedDate || multiSelectMode) {
             selectedDateDisplay.innerHTML = '📅 Дата не выбрана';
             timeSelectionArea.style.display = 'none';
             bookingFormArea.style.display = 'none';
@@ -657,21 +724,70 @@
         });
     }
 
-    function updateDayOffButton() {
-        if (!isAdmin || !selectedDate) { dayOffControl.innerHTML = ''; return; }
-        const dk = formatDateKey(selectedDate);
-        const isOff = isDayOff(dk);
-        dayOffControl.innerHTML = `<button class="modal-btn btn-primary" id="toggleDayOffBtn">${isOff ? 'Сделать рабочим' : 'Сделать выходным'}</button>`;
-        document.getElementById('toggleDayOffBtn').addEventListener('click', async () => {
-            if (isDayOff(dk)) {
-                await db.collection('daysOff').doc(dk).delete();
-            } else {
-                await db.collection('daysOff').doc(dk).set({});
-            }
-        });
+    function updateMasterPanel() {
+        if (!isAdmin) return;
+        if (selectedDate && !multiSelectMode) {
+            calendarWrapper.classList.add('shifted');
+            toggleDayOffBtn.style.display = 'inline-block';
+            multiSelectBtn.style.display = 'inline-block';
+            const dk = formatDateKey(selectedDate);
+            toggleDayOffBtn.textContent = isDayOff(dk) ? 'Сделать рабочим' : 'Сделать выходным';
+            multiActions.style.display = 'none';
+        } else if (multiSelectMode) {
+            calendarWrapper.classList.add('shifted');
+            toggleDayOffBtn.style.display = 'none';
+            multiSelectBtn.textContent = 'Завершить выбор';
+            multiActions.style.display = selectedDaysSet.size > 0 ? 'block' : 'none';
+        } else {
+            calendarWrapper.classList.remove('shifted');
+            toggleDayOffBtn.style.display = 'none';
+            multiSelectBtn.textContent = '✎ Выбрать несколько';
+            multiActions.style.display = 'none';
+        }
     }
 
-    // ---------- ЗАПИСЬ КЛИЕНТА ----------
+    toggleDayOffBtn.addEventListener('click', async () => {
+        if (!selectedDate) return;
+        const dk = formatDateKey(selectedDate);
+        if (isDayOff(dk)) {
+            await db.collection('daysOff').doc(dk).delete();
+        } else {
+            await db.collection('daysOff').doc(dk).set({});
+        }
+    });
+
+    multiSelectBtn.addEventListener('click', () => {
+        multiSelectMode = !multiSelectMode;
+        if (!multiSelectMode) selectedDaysSet.clear();
+        selectedDate = null;
+        selectedTime = null;
+        timeSelectionArea.style.display = 'none';
+        bookingFormArea.style.display = 'none';
+        renderCalendar();
+        updateMasterPanel();
+    });
+
+    applyMultiOffBtn.addEventListener('click', async () => {
+        for (const dk of selectedDaysSet) {
+            if (!isDayOff(dk)) await db.collection('daysOff').doc(dk).set({});
+        }
+        selectedDaysSet.clear();
+        multiSelectMode = false;
+        renderCalendar();
+        updateMasterPanel();
+    });
+
+    applyMultiWorkBtn.addEventListener('click', async () => {
+        for (const dk of selectedDaysSet) {
+            if (isDayOff(dk)) await db.collection('daysOff').doc(dk).delete();
+        }
+        selectedDaysSet.clear();
+        multiSelectMode = false;
+        renderCalendar();
+        updateMasterPanel();
+    });
+
+    // Запись
     bookBtn.addEventListener('click', async () => {
         if (!selectedDate || !selectedTime) return;
         const dk = formatDateKey(selectedDate);
@@ -722,7 +838,7 @@
         return null;
     }
 
-    // ---------- ИИ ЧАТ (БЕЗ КЛЮЧА В КОДЕ) ----------
+    // Чат (через Cloud Function)
     aiChatBtn.addEventListener('click', () => aiChatModal.classList.add('active'));
     document.getElementById('closeAiChatBtn').addEventListener('click', () => aiChatModal.classList.remove('active'));
     document.getElementById('sendChatBtn').addEventListener('click', sendChat);
@@ -748,6 +864,9 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
+    // Архив, поиск окна, чёрный список, админ-панель – идентичны предыдущей версии, их код опущен для краткости, но должен быть добавлен
+    // (можно взять из предыдущего ответа, начиная с archiveModal)
+    // ...
     // ---------- АРХИВ (МОДАЛЬНОЕ ОКНО) ----------
     const archiveModal = document.createElement('div');
     archiveModal.className = 'modal';
@@ -987,10 +1106,10 @@
             });
         });
     }
-
+    // Подписка на обновления
     db.collection('daysOff').onSnapshot(snap => {
         daysOff = snap.docs.map(d => d.id);
-        if (selectedDate) updateDayOffButton();
+        if (selectedDate) updateMasterPanel();
     });
 
     function subscribeToUpdates() {
@@ -1008,7 +1127,6 @@
     }
     subscribeToUpdates();
 
-    // ---------- НАВИГАЦИЯ ----------
     document.getElementById('prevMonth').addEventListener('click', ()=>{
         currentMonth--;
         if (currentMonth<0) { currentMonth=11; currentYear--; }
@@ -1022,9 +1140,7 @@
         renderAll();
     });
 
-    // ---------- ЗАВЕРШЕНИЕ ----------
-    // Функция updateUIForRole уже определена выше (она просто вызывает renderAdminBookings и обновляет видимость)
-    // Всё готово!
+    initializeAuth();
 </script>
 </body>
 </html>
