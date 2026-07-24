@@ -29,28 +29,34 @@
             backdrop-filter: blur(20px);
             border-radius: 32px;
             box-shadow: 0 30px 50px rgba(200, 90, 120, 0.2), 0 10px 20px rgba(200, 90, 120, 0.1);
-            padding: 35px 30px;
+            padding: 25px 20px;
             position: relative;
         }
 
+        /* Шапка с кнопками */
         .auth-panel {
-            position: absolute;
-            top: 25px;
-            right: 30px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
             flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .auth-status {
             background: #fff0f5;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
             font-weight: 500;
             color: #b3436e;
             box-shadow: 0 4px 8px rgba(180, 70, 110, 0.1);
+            font-size: 0.9rem;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .auth-btn {
@@ -58,10 +64,11 @@
             border: none;
             color: white;
             font-weight: 600;
-            padding: 8px 18px;
+            padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
             font-size: 0.85rem;
+            white-space: nowrap;
         }
 
         .auth-btn:hover {
@@ -69,7 +76,7 @@
         }
 
         h1 {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 600;
             color: #b3436e;
             text-align: center;
@@ -79,19 +86,71 @@
         .subtitle {
             text-align: center;
             color: #a05d7a;
-            font-size: 1rem;
-            margin-bottom: 25px;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
         }
 
+        /* Панель мастера (выходные) */
+        .master-toolbar {
+            display: none;
+            background: #fff0f5;
+            border-radius: 20px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 6px 14px rgba(180, 70, 110, 0.1);
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .master-toolbar.visible {
+            display: flex;
+        }
+
+        .toggle-dayoff-btn,
+        .multi-select-btn,
+        .apply-multi-btn {
+            background: white;
+            border: 1.5px solid #e36b8c;
+            color: #e36b8c;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .toggle-dayoff-btn:hover,
+        .multi-select-btn:hover,
+        .apply-multi-btn:hover {
+            background: #e36b8c;
+            color: white;
+        }
+
+        .selected-date-info {
+            background: #fff0f5;
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #5c2d43;
+            font-weight: 500;
+            box-shadow: 0 6px 14px rgba(180, 70, 110, 0.1);
+        }
+
+        /* Календарь */
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .month-year {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 600;
             color: #5c2d43;
             background: #fff0f5;
@@ -126,15 +185,15 @@
             text-align: center;
             font-weight: 600;
             color: #b3436e;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-size: 0.9rem;
         }
 
         .days-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 25px;
+            gap: 6px;
+            margin-bottom: 20px;
         }
 
         .day-cell {
@@ -143,9 +202,9 @@
             align-items: center;
             justify-content: center;
             background: white;
-            border-radius: 16px;
+            border-radius: 14px;
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: #4a2c3a;
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
@@ -197,66 +256,29 @@
         .day-cell.day-off::after {
             content: 'вых.';
             position: absolute;
-            bottom: 3px;
+            bottom: 2px;
             font-size: 0.6rem;
             color: #b3436e;
             background: rgba(255,255,255,0.8);
             border-radius: 8px;
-            padding: 0 4px;
+            padding: 0 3px;
         }
 
         .day-cell.has-appointments::before {
             content: '';
             position: absolute;
-            bottom: 6px;
+            bottom: 4px;
             width: 6px;
             height: 6px;
             background: #e36b8c;
             border-radius: 50%;
         }
 
-        .selected-date-info {
-            background: #fff0f5;
-            border-radius: 20px;
-            padding: 15px 20px;
-            margin: 10px 0 20px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            color: #5c2d43;
-            font-weight: 500;
-            box-shadow: 0 6px 14px rgba(180, 70, 110, 0.1);
-        }
-
-        .day-off-control {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .toggle-dayoff-btn, .apply-multi-btn, .multi-select-btn {
-            background: white;
-            border: 1.5px solid #e36b8c;
-            color: #e36b8c;
-            font-weight: 600;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .toggle-dayoff-btn:hover, .apply-multi-btn:hover, .multi-select-btn:hover {
-            background: #e36b8c;
-            color: white;
-        }
-
         .time-slots {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin: 15px 0;
+            margin: 10px 0;
         }
 
         .time-slot {
@@ -264,7 +286,7 @@
             background: white;
             border: 1.5px solid #f0d3e0;
             border-radius: 30px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: #4a2c3a;
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
@@ -294,7 +316,8 @@
             color: white;
         }
 
-        .time-slot.booked, .time-slot.unavailable {
+        .time-slot.booked,
+        .time-slot.unavailable {
             background: #f5f5f5;
             color: #b3a1a8;
             border-color: #e0d4d8;
@@ -302,11 +325,18 @@
             text-decoration: line-through;
         }
 
+        .past-message {
+            color: #b3436e;
+            font-weight: 500;
+            margin: 10px 0;
+            text-align: center;
+        }
+
         .booking-form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 15px;
             background: rgba(255,255,255,0.8);
             backdrop-filter: blur(10px);
             border-radius: 24px;
@@ -315,7 +345,7 @@
         }
 
         .booking-form input {
-            padding: 14px 18px;
+            padding: 12px 16px;
             border: 1.5px solid #f0d3e0;
             border-radius: 30px;
             font-size: 1rem;
@@ -333,7 +363,7 @@
             border: none;
             color: white;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
             padding: 14px;
             border-radius: 30px;
             cursor: pointer;
@@ -347,14 +377,14 @@
         }
 
         .admin-bookings {
-            margin-top: 30px;
+            margin-top: 25px;
             background: #fff0f5;
             border-radius: 20px;
             padding: 20px;
         }
 
         .admin-bookings h2 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: #b3436e;
             margin-bottom: 12px;
         }
@@ -384,19 +414,43 @@
             text-align: center;
             margin: 10px 0;
         }
+
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 20px 15px;
+            }
+            .auth-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .day-cell {
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <div class="auth-panel" id="authPanel">
+        <!-- Шапка -->
+        <div class="auth-panel">
             <span class="auth-status" id="authStatus">👤 Гость</span>
-            <button class="auth-btn" id="loginBtn">Войти как мастер</button>
-            <button class="auth-btn" id="myBookingsBtn" style="margin-left:6px;">📋 Мои записи</button>
+            <div class="auth-buttons">
+                <button class="auth-btn" id="loginBtn">Войти как мастер</button>
+                <button class="auth-btn" id="myBookingsBtn">📋 Мои записи</button>
+            </div>
         </div>
 
         <h1>💅 Маникюр</h1>
         <div class="subtitle">Запись на двухчасовые сеансы</div>
 
+        <!-- Панель мастера (выходные) -->
+        <div class="master-toolbar" id="masterToolbar">
+            <button class="toggle-dayoff-btn" id="toggleDayOffBtn" style="display: none;">Сделать выходным</button>
+            <button class="multi-select-btn" id="multiSelectBtn">✎ Выбрать несколько</button>
+            <button class="apply-multi-btn" id="applyMultiBtn" style="display: none;">Применить ко всем</button>
+        </div>
+
+        <!-- Календарь -->
         <div class="calendar-header">
             <button class="nav-btn" id="prevMonth">◀</button>
             <span class="month-year" id="monthYear"></span>
@@ -410,11 +464,10 @@
 
         <div class="selected-date-info" id="selectedDateDisplay">
             <span>📅 Дата не выбрана</span>
-            <div class="day-off-control" id="dayOffControl" style="display: none;"></div>
         </div>
 
         <div id="timeSelectionArea" style="display: none;">
-            <div style="font-weight: 600; color: #5c2d43; margin-bottom: 8px;">Доступное время (2 часа):</div>
+            <div style="font-weight: 600; color: #5c2d43; margin-bottom: 5px;">Доступное время (2 часа):</div>
             <div class="time-slots" id="timeSlotsContainer"></div>
         </div>
 
@@ -440,12 +493,10 @@
         const firebaseConfig = {
             apiKey: "AIzaSyCetvGM77zUc_Llh5p-FLTF6PkvH-lCPQ8",
             authDomain: "manik-56a31.firebaseapp.com",
-            databaseURL: "https://manik-56a31-default-rtdb.firebaseio.com",
             projectId: "manik-56a31",
             storageBucket: "manik-56a31.firebasestorage.app",
             messagingSenderId: "540265958043",
             appId: "1:540265958043:web:f3dd0d7ee6b9c9ffbe543e",
-            measurementId: "G-S80KMT430B"
         };
         // =============================================================
 
@@ -466,7 +517,7 @@
         let selectedTime = null;
         let isAdmin = false;
         let multiSelectMode = false;
-        let selectedDaysSet = new Set(); // Хранит dateKey выбранных в мультирежиме дней
+        let selectedDaysSet = new Set();
 
         let appointments = {};
         let daysOff = [];
@@ -477,7 +528,10 @@
         const monthYearEl = document.getElementById('monthYear');
         const daysGridEl = document.getElementById('daysGrid');
         const selectedDateDisplay = document.getElementById('selectedDateDisplay');
-        const dayOffControl = document.getElementById('dayOffControl');
+        const masterToolbar = document.getElementById('masterToolbar');
+        const toggleDayOffBtn = document.getElementById('toggleDayOffBtn');
+        const multiSelectBtn = document.getElementById('multiSelectBtn');
+        const applyMultiBtn = document.getElementById('applyMultiBtn');
         const timeSelectionArea = document.getElementById('timeSelectionArea');
         const timeSlotsContainer = document.getElementById('timeSlotsContainer');
         const bookingFormArea = document.getElementById('bookingFormArea');
@@ -651,8 +705,17 @@
             return slotEnd <= now;
         }
 
+        // Функция проверки, что дата не раньше завтрашнего дня
+        function isDateInPast(date) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            return date < tomorrow;
+        }
+
         function renderAll() {
             renderCalendar();
+            updateMasterToolbar();
             if (selectedDate) updateUIForSelectedDate();
             renderAdminBookings();
         }
@@ -698,7 +761,7 @@
                             selectedDaysSet.add(dateKey);
                         }
                         renderCalendar();
-                        updateMultiSelectUI();
+                        updateMasterToolbar();
                         return;
                     }
                     const [y, m, d] = dateKey.split('-').map(Number);
@@ -706,71 +769,97 @@
                     selectedTime = null;
                     updateUIForSelectedDate();
                     renderCalendar();
+                    updateMasterToolbar();
                 });
             });
         }
 
-        // ---------- УПРАВЛЕНИЕ ВЫХОДНЫМИ ----------
+        // ---------- ПАНЕЛЬ ИНСТРУМЕНТОВ МАСТЕРА ----------
+        function updateMasterToolbar() {
+            if (!isAdmin) {
+                masterToolbar.classList.remove('visible');
+                return;
+            }
+            masterToolbar.classList.add('visible');
+
+            // Кнопка одиночного выходного
+            if (selectedDate && !multiSelectMode) {
+                const dateKey = formatDateKey(selectedDate);
+                toggleDayOffBtn.style.display = 'inline-block';
+                toggleDayOffBtn.textContent = isDayOff(dateKey) ? 'Сделать рабочим' : 'Сделать выходным';
+            } else {
+                toggleDayOffBtn.style.display = 'none';
+            }
+
+            // Кнопка мультивыбора
+            multiSelectBtn.textContent = multiSelectMode ? 'Завершить выбор' : '✎ Выбрать несколько';
+
+            // Кнопка применения для мультивыбора
+            if (multiSelectMode && selectedDaysSet.size > 0) {
+                applyMultiBtn.style.display = 'inline-block';
+            } else {
+                applyMultiBtn.style.display = 'none';
+            }
+        }
+
+        // Обработчики для панели мастера
+        toggleDayOffBtn.addEventListener('click', () => {
+            if (!selectedDate) return;
+            const dateKey = formatDateKey(selectedDate);
+            setDayOff(dateKey, !isDayOff(dateKey));
+        });
+
+        multiSelectBtn.addEventListener('click', () => {
+            multiSelectMode = !multiSelectMode;
+            if (!multiSelectMode) {
+                selectedDaysSet.clear();
+            }
+            selectedDate = null;
+            selectedTime = null;
+            timeSelectionArea.style.display = 'none';
+            bookingFormArea.style.display = 'none';
+            renderCalendar();
+            updateMasterToolbar();
+            updateUIForSelectedDate();
+        });
+
+        applyMultiBtn.addEventListener('click', () => {
+            selectedDaysSet.forEach(dateKey => {
+                if (!isDayOff(dateKey)) {
+                    setDayOff(dateKey, true);
+                }
+            });
+            selectedDaysSet.clear();
+            multiSelectMode = false;
+            renderCalendar();
+            updateMasterToolbar();
+            updateUIForSelectedDate();
+        });
+
+        // ---------- ОБНОВЛЕНИЕ ВЫБРАННОЙ ДАТЫ ----------
         function updateUIForSelectedDate() {
-            if (!selectedDate) {
+            if (!selectedDate || multiSelectMode) {
                 selectedDateDisplay.innerHTML = '<span>📅 Дата не выбрана</span>';
                 timeSelectionArea.style.display = 'none';
                 bookingFormArea.style.display = 'none';
-                if (dayOffControl) dayOffControl.innerHTML = '';
                 return;
             }
 
             const dateKey = formatDateKey(selectedDate);
             const options = { weekday: 'long', day: 'numeric', month: 'long' };
             const formatted = selectedDate.toLocaleDateString('ru-RU', options);
-            const isOff = isDayOff(dateKey);
-
             selectedDateDisplay.innerHTML = `<span>📅 ${formatted}</span>`;
 
-            if (isAdmin) {
-                dayOffControl.style.display = 'block';
-                let controlHTML = '';
-
-                // Кнопка одиночного выходного
-                controlHTML += isOff
-                    ? '<button class="toggle-dayoff-btn" id="toggleDayOffBtn">Сделать рабочим</button>'
-                    : '<button class="toggle-dayoff-btn" id="toggleDayOffBtn">Сделать выходным</button>';
-
-                // Кнопка мультивыбора
-                controlHTML += `<button class="multi-select-btn" id="multiSelectBtn">✎ ${multiSelectMode ? 'Завершить выбор' : 'Выбрать несколько'}</button>`;
-
-                dayOffControl.innerHTML = controlHTML;
-
-                // Обработчик одиночного выходного
-                const toggleBtn = document.getElementById('toggleDayOffBtn');
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', () => {
-                        setDayOff(dateKey, !isOff);
-                    });
-                }
-
-                // Обработчик мультивыбора
-                const multiBtn = document.getElementById('multiSelectBtn');
-                if (multiBtn) {
-                    multiBtn.addEventListener('click', () => {
-                        multiSelectMode = !multiSelectMode;
-                        if (!multiSelectMode) {
-                            selectedDaysSet.clear();
-                        }
-                        selectedDate = null;
-                        selectedTime = null;
-                        renderCalendar();
-                        updateUIForSelectedDate();
-                        updateMultiSelectUI();
-                    });
-                }
-            } else {
-                dayOffControl.style.display = 'none';
-                dayOffControl.innerHTML = '';
+            // Проверка на прошлое (нельзя записаться на сегодня и раньше)
+            if (isDateInPast(selectedDate)) {
+                timeSelectionArea.innerHTML = '<div class="past-message">⛔ Запись возможна только начиная с завтрашнего дня</div>';
+                timeSelectionArea.style.display = 'block';
+                bookingFormArea.style.display = 'none';
+                return;
             }
 
-            // Показ слотов, если не выходной и не мультирежим
-            if (isOff || multiSelectMode) {
+            const isOff = isDayOff(dateKey);
+            if (isOff) {
                 timeSelectionArea.style.display = 'none';
                 bookingFormArea.style.display = 'none';
                 return;
@@ -814,43 +903,16 @@
             });
         }
 
-        function updateMultiSelectUI() {
-            if (!multiSelectMode) {
-                dayOffControl.querySelector('#applyMultiBtn')?.remove();
-                return;
-            }
-            // Добавляем кнопку применения, если есть выбранные дни
-            if (selectedDaysSet.size > 0) {
-                if (!document.getElementById('applyMultiBtn')) {
-                    const applyBtn = document.createElement('button');
-                    applyBtn.className = 'apply-multi-btn';
-                    applyBtn.id = 'applyMultiBtn';
-                    applyBtn.textContent = 'Сделать выходными';
-                    applyBtn.addEventListener('click', () => {
-                        selectedDaysSet.forEach(dateKey => {
-                            if (!isDayOff(dateKey)) {
-                                setDayOff(dateKey, true);
-                            }
-                        });
-                        selectedDaysSet.clear();
-                        multiSelectMode = false;
-                        renderCalendar();
-                        updateUIForSelectedDate();
-                    });
-                    dayOffControl.appendChild(applyBtn);
-                }
-            } else {
-                const applyBtn = document.getElementById('applyMultiBtn');
-                if (applyBtn) applyBtn.remove();
-            }
-        }
-
         // ---------- ЗАПИСЬ КЛИЕНТА ----------
         bookBtn.addEventListener('click', async () => {
             if (!selectedDate || !selectedTime) return;
             const dateKey = formatDateKey(selectedDate);
+            if (isDateInPast(selectedDate)) {
+                alert('Нельзя записаться на прошедший день. Выберите завтра или позже.');
+                return;
+            }
             if (isDayOff(dateKey)) {
-                alert('Сегодня выходной, запись невозможна.');
+                alert('Этот день выходной. Выберите другой.');
                 return;
             }
             const name = clientNameInput.value.trim();
@@ -859,14 +921,6 @@
                 alert('Введите имя и телефон.');
                 return;
             }
-            const bookedSlots = getBookedSlotsForDate(selectedDate);
-            if (bookedSlots.includes(selectedTime) || isPastSlot(selectedDate, selectedTime)) {
-                alert('Это время уже занято или прошло.');
-                updateUIForSelectedDate();
-                renderCalendar();
-                return;
-            }
-
             try {
                 await addAppointment(dateKey, selectedTime, name, phone);
                 clientNameInput.value = '';
@@ -874,7 +928,6 @@
                 selectedTime = null;
                 updateUIForSelectedDate();
                 alert('✅ Вы записаны!');
-
                 // Показать все записи клиента
                 const clientApps = [];
                 Object.keys(appointments).forEach(dk => {
@@ -970,14 +1023,9 @@
             selectedTime = null;
             multiSelectMode = false;
             selectedDaysSet.clear();
-            if (dayOffControl) dayOffControl.innerHTML = '';
             timeSelectionArea.style.display = 'none';
             bookingFormArea.style.display = 'none';
-        }
-
-        function hideTimeAndForm() {
-            timeSelectionArea.style.display = 'none';
-            bookingFormArea.style.display = 'none';
+            updateMasterToolbar();
         }
 
         function updateUIForRole() {
@@ -986,8 +1034,12 @@
                 multiSelectMode = false;
                 selectedDaysSet.clear();
             }
+            updateMasterToolbar();
             if (selectedDate) updateUIForSelectedDate();
-            else hideTimeAndForm();
+            else {
+                timeSelectionArea.style.display = 'none';
+                bookingFormArea.style.display = 'none';
+            }
         }
 
         // ---------- ЗАПУСК ----------
