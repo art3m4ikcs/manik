@@ -33,7 +33,6 @@
             position: relative;
         }
 
-        /* Шапка с кнопками */
         .auth-panel {
             display: flex;
             justify-content: space-between;
@@ -90,7 +89,6 @@
             margin-bottom: 20px;
         }
 
-        /* Панель мастера (выходные) */
         .master-toolbar {
             display: none;
             background: #fff0f5;
@@ -141,7 +139,6 @@
             box-shadow: 0 6px 14px rgba(180, 70, 110, 0.1);
         }
 
-        /* Календарь */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -431,52 +428,41 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Шапка -->
         <div class="auth-panel">
-            <span class="auth-status" id="authStatus">Гость</span>
+            <span class="auth-status" id="authStatus"> Гость</span>
             <div class="auth-buttons">
                 <button class="auth-btn" id="loginBtn">Войти как мастер</button>
-                <button class="auth-btn" id="myBookingsBtn">Мои записи</button>
+                <button class="auth-btn" id="myBookingsBtn"> Мои записи</button>
             </div>
         </div>
-
         <h1> Маникюр</h1>
         <div class="subtitle">Запись</div>
-
-        <!-- Панель мастера (выходные) -->
         <div class="master-toolbar" id="masterToolbar">
             <button class="toggle-dayoff-btn" id="toggleDayOffBtn" style="display: none;">Сделать выходным</button>
-            <button class="multi-select-btn" id="multiSelectBtn">✎ Выбрать несколько</button>
+            <button class="multi-select-btn" id="multiSelectBtn"> Выбрать несколько</button>
             <button class="apply-multi-btn" id="applyMultiBtn" style="display: none;">Применить ко всем</button>
         </div>
-
-        <!-- Календарь -->
         <div class="calendar-header">
             <button class="nav-btn" id="prevMonth">◀</button>
             <span class="month-year" id="monthYear"></span>
             <button class="nav-btn" id="nextMonth">▶</button>
         </div>
-
         <div class="weekdays">
             <span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span>
         </div>
         <div class="days-grid" id="daysGrid"></div>
-
         <div class="selected-date-info" id="selectedDateDisplay">
-            <span> Дата не выбрана</span>
+            <span>Дата не выбрана</span>
         </div>
-
         <div id="timeSelectionArea" style="display: none;">
             <div style="font-weight: 600; color: #5c2d43; margin-bottom: 5px;">Доступное время (2 часа):</div>
             <div class="time-slots" id="timeSlotsContainer"></div>
         </div>
-
         <div id="bookingFormArea" style="display: none;" class="booking-form">
             <input type="text" id="clientName" placeholder="Ваше имя" required>
             <input type="tel" id="clientPhone" placeholder="Телефон (в формате +7...)" required>
             <button class="book-btn" id="bookBtn">Записаться</button>
         </div>
-
         <div class="admin-bookings" id="adminBookings" style="display: none;">
             <h2> Все записи (видны только мастеру)</h2>
             <div id="bookingsContainer"></div>
@@ -489,7 +475,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // ========== КОНФИГУРАЦИЯ FIREBASE (ЗАМЕНИТЕ НА СВОЮ) ==========
+        // ========== ВСТАВЬТЕ СВОЮ КОНФИГУРАЦИЮ FIREBASE ==========
         const firebaseConfig = {
             apiKey: "AIzaSyCetvGM77zUc_Llh5p-FLTF6PkvH-lCPQ8",
             authDomain: "manik-56a31.firebaseapp.com",
@@ -498,7 +484,7 @@
             messagingSenderId: "540265958043",
             appId: "1:540265958043:web:f3dd0d7ee6b9c9ffbe543e",
         };
-        // =============================================================
+        // =========================================================
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -524,7 +510,7 @@
 
         const allTimeSlots = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'];
 
-        // ---------- DOM-ЭЛЕМЕНТЫ ----------
+        // DOM-элементы
         const monthYearEl = document.getElementById('monthYear');
         const daysGridEl = document.getElementById('daysGrid');
         const selectedDateDisplay = document.getElementById('selectedDateDisplay');
@@ -604,13 +590,12 @@
                 alert('Записей с таким номером не найдено.');
                 return;
             }
-            let message = ' Ваши записи:\n\n';
+            let message = 'Ваши записи:\n\n';
             found.forEach((app, i) => {
                 const d = new Date(app.dateKey);
                 const dateStr = d.toLocaleDateString('ru-RU', { day:'numeric', month:'long', weekday:'short' });
                 const [h] = app.time.split(':').map(Number);
-                const endTime = `${String(h+2).padStart(2,'0')}:00`;
-                message += `${i+1}. ${dateStr} ${app.time}-${endTime}\n   Имя: ${app.name}\n\n`;
+                message += `${i+1}. ${dateStr} ${app.time}-${String(h+2).padStart(2,'0')}:00\n   Имя: ${app.name}\n\n`;
             });
             alert(message);
         });
@@ -705,16 +690,13 @@
             return slotEnd <= now;
         }
 
-        // Функция проверки, что дата не раньше завтрашнего дня
         function isDateInPast(date) {
-    // Завтра, 00:00:00
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    // Выбранная дата без времени
-    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    return dateOnly < tomorrow;
-}
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            return dateOnly < tomorrow;
+        }
 
         function renderAll() {
             renderCalendar();
@@ -755,7 +737,7 @@
             daysGridEl.innerHTML = html;
 
             document.querySelectorAll('.day-cell[data-date]').forEach(cell => {
-                cell.addEventListener('click', function(e) {
+                cell.addEventListener('click', function() {
                     const dateKey = this.dataset.date;
                     if (multiSelectMode && isAdmin) {
                         if (selectedDaysSet.has(dateKey)) {
@@ -777,7 +759,7 @@
             });
         }
 
-        // ---------- ПАНЕЛЬ ИНСТРУМЕНТОВ МАСТЕРА ----------
+        // ---------- ПАНЕЛЬ МАСТЕРА ----------
         function updateMasterToolbar() {
             if (!isAdmin) {
                 masterToolbar.classList.remove('visible');
@@ -785,7 +767,6 @@
             }
             masterToolbar.classList.add('visible');
 
-            // Кнопка одиночного выходного
             if (selectedDate && !multiSelectMode) {
                 const dateKey = formatDateKey(selectedDate);
                 toggleDayOffBtn.style.display = 'inline-block';
@@ -794,10 +775,8 @@
                 toggleDayOffBtn.style.display = 'none';
             }
 
-            // Кнопка мультивыбора
             multiSelectBtn.textContent = multiSelectMode ? 'Завершить выбор' : '✎ Выбрать несколько';
 
-            // Кнопка применения для мультивыбора
             if (multiSelectMode && selectedDaysSet.size > 0) {
                 applyMultiBtn.style.display = 'inline-block';
             } else {
@@ -805,7 +784,6 @@
             }
         }
 
-        // Обработчики для панели мастера
         toggleDayOffBtn.addEventListener('click', () => {
             if (!selectedDate) return;
             const dateKey = formatDateKey(selectedDate);
@@ -828,9 +806,7 @@
 
         applyMultiBtn.addEventListener('click', () => {
             selectedDaysSet.forEach(dateKey => {
-                if (!isDayOff(dateKey)) {
-                    setDayOff(dateKey, true);
-                }
+                if (!isDayOff(dateKey)) setDayOff(dateKey, true);
             });
             selectedDaysSet.clear();
             multiSelectMode = false;
@@ -841,86 +817,28 @@
 
         // ---------- ОБНОВЛЕНИЕ ВЫБРАННОЙ ДАТЫ ----------
         function updateUIForSelectedDate() {
-    if (!selectedDate || multiSelectMode) {
-        selectedDateDisplay.innerHTML = '<span>Дата не выбрана</span>';
-        timeSelectionArea.style.display = 'none';
-        bookingFormArea.style.display = 'none';
-        return;
-    }
+            if (!selectedDate || multiSelectMode) {
+                selectedDateDisplay.innerHTML = '<span>Дата не выбрана</span>';
+                timeSelectionArea.style.display = 'none';
+                bookingFormArea.style.display = 'none';
+                return;
+            }
 
-    const dateKey = formatDateKey(selectedDate);
-    const options = { weekday: 'long', day: 'numeric', month: 'long' };
-    const formatted = selectedDate.toLocaleDateString('ru-RU', options);
-    selectedDateDisplay.innerHTML = `<span> ${formatted}</span>`;
-
-    // ВСЕГДА восстанавливаем стандартную структуру timeSelectionArea
-    timeSelectionArea.innerHTML = `
-        <div style="font-weight: 600; color: #5c2d43; margin-bottom: 5px;">Доступное время (2 часа):</div>
-        <div class="time-slots" id="timeSlotsContainer"></div>
-    `;
-    timeSlotsContainer = document.getElementById('timeSlotsContainer');
-    timeSelectionArea.style.display = 'block';
-
-    // Проверка на прошлое
-    if (isDateInPast(selectedDate)) {
-        timeSelectionArea.innerHTML = '<div class="past-message">Запись возможна только начиная с завтрашнего дня</div>';
-        bookingFormArea.style.display = 'none';
-        return;
-    }
-
-    const isOff = isDayOff(dateKey);
-    if (isOff) {
-        timeSelectionArea.style.display = 'none';
-        bookingFormArea.style.display = 'none';
-        return;
-    }
-
-    const bookedSlots = getBookedSlotsForDate(selectedDate);
-    let slotsHtml = '';
-    allTimeSlots.forEach(time => {
-        const [h, m] = time.split(':').map(Number);
-        const endTime = `${String(h+2).padStart(2,'0')}:${m}`;
-        const isBooked = bookedSlots.includes(time);
-        const past = isPastSlot(selectedDate, time);
-        let slotClass = 'time-slot';
-        if (isBooked) slotClass += ' booked';
-        else if (past) slotClass += ' unavailable';
-        if (selectedTime === time && !isBooked && !past) slotClass += ' selected-time';
-        slotsHtml += `<div class="${slotClass}" data-time="${time}">${time}<small>до ${endTime}</small></div>`;
-    });
-
-    timeSlotsContainer.innerHTML = slotsHtml;
-    timeSelectionArea.style.display = 'block';
-
-    if (selectedTime && (bookedSlots.includes(selectedTime) || isPastSlot(selectedDate, selectedTime))) {
-        selectedTime = null;
-    }
-    bookingFormArea.style.display = selectedTime ? 'flex' : 'none';
-
-    document.querySelectorAll('.time-slot:not(.booked):not(.unavailable)').forEach(slot => {
-        if (slot) {
-            slot.addEventListener('click', function() {
-                const time = this.dataset.time;
-                const currentBooked = getBookedSlotsForDate(selectedDate);
-                if (currentBooked.includes(time) || isPastSlot(selectedDate, time)) {
-                    updateUIForSelectedDate();
-                    return;
-                }
-                selectedTime = time;
-                updateUIForSelectedDate();
-            });
-        }
-    });
-}
             const dateKey = formatDateKey(selectedDate);
             const options = { weekday: 'long', day: 'numeric', month: 'long' };
             const formatted = selectedDate.toLocaleDateString('ru-RU', options);
-            selectedDateDisplay.innerHTML = `<span> ${formatted}</span>`;
+            selectedDateDisplay.innerHTML = `<span>${formatted}</span>`;
 
-            // Проверка на прошлое (нельзя записаться на сегодня и раньше)
+            // Восстанавливаем структуру блока времени
+            timeSelectionArea.innerHTML = `
+                <div style="font-weight: 600; color: #5c2d43; margin-bottom: 5px;">Доступное время (2 часа):</div>
+                <div class="time-slots" id="timeSlotsContainer"></div>
+            `;
+            timeSlotsContainer = document.getElementById('timeSlotsContainer');
+            timeSelectionArea.style.display = 'block';
+
             if (isDateInPast(selectedDate)) {
                 timeSelectionArea.innerHTML = '<div class="past-message">Запись возможна только начиная с завтрашнего дня</div>';
-                timeSelectionArea.style.display = 'block';
                 bookingFormArea.style.display = 'none';
                 return;
             }
@@ -975,11 +893,11 @@
             if (!selectedDate || !selectedTime) return;
             const dateKey = formatDateKey(selectedDate);
             if (isDateInPast(selectedDate)) {
-                alert('Нельзя записаться на прошедший день. Выберите завтра или позже.');
+                alert('Нельзя записаться на прошедший день.');
                 return;
             }
             if (isDayOff(dateKey)) {
-                alert('Этот день выходной. Выберите другой.');
+                alert('Этот день выходной.');
                 return;
             }
             const name = clientNameInput.value.trim();
@@ -994,7 +912,8 @@
                 clientPhoneInput.value = '';
                 selectedTime = null;
                 updateUIForSelectedDate();
-                alert('✅ Вы записаны!');
+                alert('Вы записаны!');
+
                 // Показать все записи клиента
                 const clientApps = [];
                 Object.keys(appointments).forEach(dk => {
