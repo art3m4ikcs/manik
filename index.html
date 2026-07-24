@@ -5,240 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manik</title>
     <link rel="icon" href="icon.png" type="image/png">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1hbmlrIiwKICAic2hvcnRfbmFtZSI6ICJNYW5payIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGQwZDBkIiwKICAidGhlbWVfY29sb3IiOiAiI2ZmN2ViMyIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImljb24ucG5nIiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
     <style>
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%);
-            min-height: 100vh;
-            display: flex; justify-content: center; align-items: center; padding: 20px;
-        }
-        .loader-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 20, 0.95); backdrop-filter: blur(15px);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 999; transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        .loader-container.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .spinner {
-            width: 60px; height: 60px; border-radius: 50%;
-            background: conic-gradient(#ff7eb3, #ff758c, #ff7eb3);
-            animation: spin 1s linear infinite;
-            box-shadow: 0 0 20px rgba(255, 126, 179, 0.5);
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loader-text { color: #ff7eb3; font-weight: 600; font-size: 1.3rem; margin-top: 20px; text-shadow: 0 0 10px rgba(255, 126, 179, 0.5); }
-
-        .app-container {
-            width: 100%; max-width: 950px;
-            background: rgba(20, 20, 35, 0.8); backdrop-filter: blur(30px);
-            border-radius: 40px; box-shadow: 0 40px 60px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,126,179,0.2);
-            padding: 25px 25px; opacity: 0; transform: translateY(20px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-            border: 1px solid rgba(255,126,179,0.3);
-            display: flex; gap: 20px; align-items: flex-start;
-        }
-        .app-container.visible { opacity: 1; transform: translateY(0); }
-
-        .calendar-wrapper { flex: 1; transition: all 0.4s ease; }
-        .calendar-wrapper.shifted { transform: translateX(-20px); flex: 0.7; }
-
-        .master-panel {
-            width: 0; overflow: hidden; background: rgba(255,126,179,0.05);
-            border-radius: 20px; padding: 0; transition: all 0.4s ease; opacity: 0;
-        }
-        .master-panel.active { width: 250px; padding: 15px; opacity: 1; }
-
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .logo {
-            font-size: 2.4rem; font-weight: 700;
-            background: linear-gradient(45deg, #ff7eb3, #ff758c, #ff7eb3);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px rgba(255,126,179,0.3);
-            animation: gradientShift 3s infinite alternate;
-        }
-        @keyframes gradientShift { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
-
-        .menu-btn {
-            background: linear-gradient(135deg, #ff7eb3, #ff758c); border: none;
-            color: white; font-weight: 600; padding: 10px 20px; border-radius: 25px;
-            cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255,126,179,0.4); display: flex; align-items: center; gap: 8px;
-        }
-        .menu-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,126,179,0.6); }
-        .menu-btn:active { transform: scale(0.95); }
-
-        .dropdown { position: relative; display: inline-block; }
-        .dropdown-content {
-            display: none; position: absolute; right: 0; top: 50px;
-            background: rgba(25,25,45,0.95); backdrop-filter: blur(20px);
-            border-radius: 20px; min-width: 220px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            z-index: 100; padding: 10px; border: 1px solid rgba(255,126,179,0.4);
-        }
-        .dropdown-content button {
-            display: block; width: 100%; background: transparent; border: none;
-            color: white; padding: 10px 15px; text-align: left; border-radius: 12px;
-            margin-bottom: 5px; transition: all 0.2s ease; font-weight: 500;
-        }
-        .dropdown-content button:hover { background: rgba(255,126,179,0.2); transform: translateX(5px); }
-        .dropdown-content button:last-child { margin-bottom: 0; }
-        .show { display: block; animation: fadeInDropdown 0.3s ease; }
-        @keyframes fadeInDropdown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin: 20px 0; }
-        .month-year {
-            font-size: 1.5rem; font-weight: 600; color: #ff7eb3;
-            background: rgba(255,126,179,0.1); padding: 8px 25px;
-            border-radius: 25px; box-shadow: 0 0 15px rgba(255,126,179,0.3);
-        }
-        .nav-btn {
-            background: rgba(255,126,179,0.2); border: none; width: 45px; height: 45px;
-            border-radius: 50%; color: #ff7eb3; font-size: 1.4rem; cursor: pointer;
-            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
-        }
-        .nav-btn:hover { background: rgba(255,126,179,0.5); box-shadow: 0 0 20px rgba(255,126,179,0.6); }
-
-        .weekdays { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; color: #ff7eb3; margin-bottom: 5px; }
-        .days-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 8px; margin: 20px 0; }
-        .day-cell {
-            aspect-ratio: 1/1; background: rgba(255,255,255,0.05); border-radius: 15px;
-            display: flex; align-items: center; justify-content: center; font-weight: 500;
-            color: #eee; cursor: pointer; transition: all 0.3s ease; border: 1px solid transparent;
-            animation: fadeInCell 0.4s ease backwards; position: relative;
-        }
-        @keyframes fadeInCell { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
-        .day-cell:hover:not(.day-off):not(.other-month) {
-            background: rgba(255,126,179,0.3); transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255,126,179,0.4); border-color: #ff7eb3;
-        }
-        .day-cell.today { border: 2px solid #ff7eb3; color: #ff7eb3; }
-        .day-cell.selected { background: linear-gradient(135deg, #ff7eb3, #ff758c); color: white; box-shadow: 0 0 20px rgba(255,126,179,0.7); }
-        .day-cell.selected-multi { background: #f9c2d2; color: #5c2d43; font-weight: 600; border: 2px solid #ff7eb3; }
-        .day-cell.other-month { color: #555; opacity: 0.4; cursor: default; }
-        .day-cell.day-off { background: rgba(100,100,100,0.2); color: #888; text-decoration: line-through; }
-        .day-cell.has-appointments::before {
-            content: ''; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
-            width: 6px; height: 6px; background: #ff7eb3; border-radius: 50%;
-        }
-
-        .time-slots { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .time-slot {
-            padding: 10px 20px; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,126,179,0.3); border-radius: 25px;
-            color: #eee; cursor: pointer; transition: all 0.3s ease;
-        }
-        .time-slot:hover:not(.booked):not(.unavailable) {
-            background: rgba(255,126,179,0.3); transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255,126,179,0.4);
-        }
-        .time-slot.selected-time { background: #ff7eb3; color: white; box-shadow: 0 0 20px rgba(255,126,179,0.7); }
-        .time-slot.booked, .time-slot.unavailable { background: rgba(80,80,80,0.4); color: #aaa; text-decoration: line-through; cursor: not-allowed; }
-
-        .booking-form {
-            display: flex; flex-direction: column; gap: 12px; margin-top: 20px;
-            background: rgba(255,255,255,0.03); border-radius: 25px; padding: 25px;
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,126,179,0.2);
-            animation: fadeIn 0.6s ease;
-        }
-        .booking-form input, .booking-form textarea {
-            padding: 12px 20px; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,126,179,0.4); border-radius: 25px;
-            color: white; font-size: 1rem; outline: none; transition: all 0.3s ease;
-        }
-        .booking-form input:focus, .booking-form textarea:focus {
-            border-color: #ff7eb3; box-shadow: 0 0 15px rgba(255,126,179,0.4);
-        }
-        .book-btn {
-            background: linear-gradient(135deg, #ff7eb3, #ff758c); border: none;
-            color: white; font-weight: 600; padding: 14px; border-radius: 30px;
-            font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(255,126,179,0.5);
-        }
-        .book-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,126,179,0.7); }
-
-        /* Модальные окна */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center;
-            z-index: 200; opacity: 0; visibility: hidden; transition: all 0.3s ease;
-        }
-        .modal.active { opacity: 1; visibility: visible; }
-        .modal-content {
-            background: rgba(25,25,45,0.95); backdrop-filter: blur(25px);
-            border-radius: 30px; padding: 30px; max-width: 450px; width: 90%;
-            border: 1px solid rgba(255,126,179,0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-            transform: scale(0.9); transition: transform 0.3s ease;
-        }
-        .modal.active .modal-content { transform: scale(1); }
-        .modal-content input, .modal-content select, .modal-content textarea {
-            width: 100%; margin: 10px 0; padding: 12px;
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,126,179,0.3);
-            border-radius: 20px; color: white;
-        }
-        .modal-btn {
-            padding: 10px 25px; border-radius: 25px; font-weight: 600;
-            cursor: pointer; border: none; margin: 5px; transition: all 0.3s ease;
-        }
-        .btn-primary { background: linear-gradient(135deg, #ff7eb3, #ff758c); color: white; box-shadow: 0 5px 20px rgba(255,126,179,0.5); }
-        .btn-secondary { background: rgba(255,255,255,0.1); color: #ddd; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,126,179,0.7); }
-        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
-
-        /* Архив */
-        .archive-container { display: flex; gap: 20px; max-height: 70vh; }
-        .archive-years-panel {
-            width: 90px; background: rgba(255,255,255,0.03); border-radius: 20px;
-            padding: 15px; overflow-y: auto; flex-shrink: 0;
-        }
-        .archive-years-panel button {
-            display: block; width: 100%; background: transparent; border: none;
-            color: #ccc; padding: 10px; border-radius: 12px; margin-bottom: 6px;
-            cursor: pointer; font-weight: 500; transition: all 0.2s;
-        }
-        .archive-years-panel button:hover, .archive-years-panel button.active {
-            background: rgba(255,126,179,0.2); color: #ff7eb3;
-        }
-        .archive-main { flex: 1; overflow-y: auto; }
-        .archive-months-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-        }
-        .archive-month-card {
-            background: rgba(255,255,255,0.05); border-radius: 16px;
-            padding: 20px 10px; text-align: center; cursor: pointer;
-            color: #ddd; transition: all 0.3s; border: 1px solid transparent;
-        }
-        .archive-month-card:hover { background: rgba(255,126,179,0.15); border-color: #ff7eb3; }
-        .archive-month-card.has-records { border-color: #ff7eb3; }
-        .archive-calendar { margin-top: 15px; }
-        .archive-detail { margin-top: 15px; background: rgba(255,126,179,0.05); border-radius: 16px; padding: 15px; }
-        .archive-day-cell {
-            aspect-ratio: 1/1; background: rgba(255,255,255,0.05); border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; font-weight: 500;
-            color: #eee; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease;
-            border: 1px solid transparent; position: relative;
-        }
-        .archive-day-cell.has-appointments {
-            background: rgba(255,126,179,0.2); border-color: #ff7eb3;
-        }
-        .archive-day-cell:hover { background: rgba(255,126,179,0.3); }
-
-        .login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10,10,20,0.95); backdrop-filter: blur(15px);
-            display: flex; justify-content: center; align-items: center; z-index: 300;
-        }
-        .tab-buttons { display: flex; margin-bottom: 20px; }
-        .tab-btn {
-            flex: 1; padding: 10px; border-radius: 20px; border: none;
-            font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-        }
-        .tab-btn.active { background: linear-gradient(135deg, #ff7eb3, #ff758c); color: white; }
-        .tab-btn:not(.active) { background: rgba(255,255,255,0.1); color: #ddd; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+        body { background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%); min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; }
+        .loader-container { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,10,20,0.95); backdrop-filter:blur(15px); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; transition:opacity 0.5s, visibility 0.5s; }
+        .loader-container.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+        .spinner { width:60px; height:60px; border-radius:50%; background:conic-gradient(#ff7eb3, #ff758c, #ff7eb3); animation:spin 1s linear infinite; box-shadow:0 0 20px rgba(255,126,179,0.5); }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .loader-text { color:#ff7eb3; font-weight:600; font-size:1.3rem; margin-top:20px; text-shadow:0 0 10px rgba(255,126,179,0.5); }
+        .app-container { width:100%; max-width:950px; background:rgba(20,20,35,0.8); backdrop-filter:blur(30px); border-radius:40px; box-shadow:0 40px 60px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,126,179,0.2); padding:25px; opacity:0; transform:translateY(20px); transition:opacity 0.6s, transform 0.6s; border:1px solid rgba(255,126,179,0.3); display:flex; gap:20px; align-items:flex-start; }
+        .app-container.visible { opacity:1; transform:translateY(0); }
+        .calendar-wrapper { flex:1; transition:all 0.4s; }
+        .calendar-wrapper.shifted { flex:0.7; transform:translateX(-20px); }
+        .master-panel { width:0; overflow:hidden; background:rgba(255,126,179,0.05); border-radius:20px; padding:0; transition:all 0.4s; opacity:0; }
+        .master-panel.active { width:250px; padding:15px; opacity:1; }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px; }
+        .logo { font-size:2.4rem; font-weight:700; background:linear-gradient(45deg, #ff7eb3, #ff758c, #ff7eb3); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 15px rgba(255,126,179,0.3); animation:gradientShift 3s infinite alternate; }
+        @keyframes gradientShift { 0% { background-position:0% 50%; } 100% { background-position:100% 50%; } }
+        .menu-btn { background:linear-gradient(135deg, #ff7eb3, #ff758c); border:none; color:white; font-weight:600; padding:10px 20px; border-radius:25px; cursor:pointer; font-size:0.9rem; transition:all 0.3s; box-shadow:0 4px 15px rgba(255,126,179,0.4); display:flex; align-items:center; gap:8px; }
+        .menu-btn:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(255,126,179,0.6); }
+        .dropdown { position:relative; display:inline-block; }
+        .dropdown-content { display:none; position:absolute; right:0; top:50px; background:rgba(25,25,45,0.95); backdrop-filter:blur(20px); border-radius:20px; min-width:220px; box-shadow:0 20px 40px rgba(0,0,0,0.6); z-index:100; padding:10px; border:1px solid rgba(255,126,179,0.4); }
+        .dropdown-content button { display:block; width:100%; background:transparent; border:none; color:white; padding:10px 15px; text-align:left; border-radius:12px; margin-bottom:5px; transition:all 0.2s; font-weight:500; }
+        .dropdown-content button:hover { background:rgba(255,126,179,0.2); transform:translateX(5px); }
+        .show { display:block; animation:fadeInDropdown 0.3s; }
+        @keyframes fadeInDropdown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        .calendar-header { display:flex; justify-content:space-between; align-items:center; margin:20px 0; }
+        .month-year { font-size:1.5rem; font-weight:600; color:#ff7eb3; background:rgba(255,126,179,0.1); padding:8px 25px; border-radius:25px; box-shadow:0 0 15px rgba(255,126,179,0.3); }
+        .nav-btn { background:rgba(255,126,179,0.2); border:none; width:45px; height:45px; border-radius:50%; color:#ff7eb3; font-size:1.4rem; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; }
+        .nav-btn:hover { background:rgba(255,126,179,0.5); box-shadow:0 0 20px rgba(255,126,179,0.6); }
+        .weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; color:#ff7eb3; margin-bottom:5px; }
+        .days-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin:20px 0; }
+        .day-cell { aspect-ratio:1/1; background:rgba(255,255,255,0.05); border-radius:15px; display:flex; align-items:center; justify-content:center; font-weight:500; color:#eee; cursor:pointer; transition:all 0.3s; border:1px solid transparent; animation:fadeInCell 0.4s backwards; position:relative; }
+        @keyframes fadeInCell { from { opacity:0; transform:scale(0.7); } to { opacity:1; transform:scale(1); } }
+        .day-cell:hover:not(.day-off):not(.other-month) { background:rgba(255,126,179,0.3); transform:translateY(-3px); box-shadow:0 8px 20px rgba(255,126,179,0.4); border-color:#ff7eb3; }
+        .day-cell.today { border:2px solid #ff7eb3; color:#ff7eb3; }
+        .day-cell.selected { background:linear-gradient(135deg, #ff7eb3, #ff758c); color:white; box-shadow:0 0 20px rgba(255,126,179,0.7); }
+        .day-cell.selected-multi { background:#f9c2d2; color:#5c2d43; font-weight:600; border:2px solid #ff7eb3; }
+        .day-cell.other-month { color:#555; opacity:0.4; cursor:default; }
+        .day-cell.day-off { background:rgba(100,100,100,0.2); color:#888; text-decoration:line-through; }
+        .day-cell.has-appointments::before { content:''; position:absolute; bottom:6px; left:50%; transform:translateX(-50%); width:6px; height:6px; background:#ff7eb3; border-radius:50%; }
+        .time-slots { display:flex; flex-wrap:wrap; gap:10px; margin:15px 0; animation:fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        .time-slot { padding:10px 20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,126,179,0.3); border-radius:25px; color:#eee; cursor:pointer; transition:all 0.3s; }
+        .time-slot:hover:not(.booked):not(.unavailable) { background:rgba(255,126,179,0.3); transform:translateY(-2px); box-shadow:0 5px 15px rgba(255,126,179,0.4); }
+        .time-slot.selected-time { background:#ff7eb3; color:white; box-shadow:0 0 20px rgba(255,126,179,0.7); }
+        .time-slot.booked, .time-slot.unavailable { background:rgba(80,80,80,0.4); color:#aaa; text-decoration:line-through; cursor:not-allowed; }
+        .booking-form { display:flex; flex-direction:column; gap:12px; margin-top:20px; background:rgba(255,255,255,0.03); border-radius:25px; padding:25px; backdrop-filter:blur(10px); border:1px solid rgba(255,126,179,0.2); animation:fadeIn 0.6s; }
+        .booking-form input, .booking-form textarea { padding:12px 20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,126,179,0.4); border-radius:25px; color:white; font-size:1rem; outline:none; transition:all 0.3s; }
+        .booking-form input:focus, .booking-form textarea:focus { border-color:#ff7eb3; box-shadow:0 0 15px rgba(255,126,179,0.4); }
+        .book-btn { background:linear-gradient(135deg, #ff7eb3, #ff758c); border:none; color:white; font-weight:600; padding:14px; border-radius:30px; font-size:1.1rem; cursor:pointer; transition:all 0.3s; box-shadow:0 8px 25px rgba(255,126,179,0.5); }
+        .book-btn:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(255,126,179,0.7); }
+        .modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:200; opacity:0; visibility:hidden; transition:all 0.3s; }
+        .modal.active { opacity:1; visibility:visible; }
+        .modal-content { background:rgba(25,25,45,0.95); backdrop-filter:blur(25px); border-radius:30px; padding:30px; max-width:450px; width:90%; border:1px solid rgba(255,126,179,0.4); box-shadow:0 25px 50px rgba(0,0,0,0.6); transform:scale(0.9); transition:transform 0.3s; }
+        .modal.active .modal-content { transform:scale(1); }
+        .modal-content input, .modal-content select, .modal-content textarea { width:100%; margin:10px 0; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,126,179,0.3); border-radius:20px; color:white; }
+        .modal-btn { padding:10px 25px; border-radius:25px; font-weight:600; cursor:pointer; border:none; margin:5px; transition:all 0.3s; }
+        .btn-primary { background:linear-gradient(135deg, #ff7eb3, #ff758c); color:white; box-shadow:0 5px 20px rgba(255,126,179,0.5); }
+        .btn-secondary { background:rgba(255,255,255,0.1); color:#ddd; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(255,126,179,0.7); }
+        .btn-secondary:hover { background:rgba(255,255,255,0.2); }
+        .login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,10,20,0.95); backdrop-filter:blur(15px); display:flex; justify-content:center; align-items:center; z-index:300; }
+        .tab-buttons { display:flex; margin-bottom:20px; }
+        .tab-btn { flex:1; padding:10px; border-radius:20px; border:none; font-weight:600; cursor:pointer; transition:all 0.3s; }
+        .tab-btn.active { background:linear-gradient(135deg, #ff7eb3, #ff758c); color:white; }
+        .tab-btn:not(.active) { background:rgba(255,255,255,0.1); color:#ddd; }
     </style>
 </head>
 <body>
@@ -248,24 +81,24 @@
 </div>
 
 <div class="login-screen" id="loginScreen">
-    <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-content" style="max-width:400px;">
         <div class="tab-buttons">
             <button class="tab-btn active" id="showLoginTab">Войти</button>
             <button class="tab-btn" id="showRegisterTab">Регистрация</button>
         </div>
         <div id="loginForm">
-            <input type="email" id="loginEmail" placeholder="Email" required>
-            <input type="password" id="loginPassword" placeholder="Пароль" required>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Пароль">
             <button class="modal-btn btn-primary" id="loginSubmitBtn" style="width:100%;">Войти</button>
             <a href="#" id="forgotPasswordLink" style="color:#ff7eb3; display:block; text-align:center; margin-top:10px; font-size:0.9rem;">Забыли пароль?</a>
         </div>
         <div id="registerForm" style="display:none;">
-            <input type="email" id="registerEmail" placeholder="Email" required>
-            <input type="password" id="registerPassword" placeholder="Пароль" required>
+            <input type="email" id="registerEmail" placeholder="Email">
+            <input type="password" id="registerPassword" placeholder="Пароль">
             <input type="text" id="registerMasterKey" placeholder="Ключ мастера (если есть)">
             <button class="modal-btn btn-primary" id="registerSubmitBtn" style="width:100%;">Зарегистрироваться</button>
         </div>
-        <p id="loginError" style="color:#ff7eb3; margin-top:10px; display:none; text-align:center;"></p>
+        <p id="loginError" style="color:#ff7eb3; margin-top:10px; display:none;"></p>
     </div>
 </div>
 
@@ -358,6 +191,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 
 <script>
+    // ⚠️ ЗАМЕНИТЕ НА СВОЙ КОНФИГ
     const firebaseConfig = {
         apiKey: "AIzaSyCetvGM77zUc_Llh5p-FLTF6PkvH-lCPQ8",
         authDomain: "manik-56a31.firebaseapp.com",
@@ -386,10 +220,9 @@
     let firstLoadCompleted = false;
     let currentUser = null;
 
+    // DOM-элементы
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('appContainer');
-    const calendarWrapper = document.getElementById('calendarWrapper');
-    const masterPanel = document.getElementById('masterPanel');
     const loginScreen = document.getElementById('loginScreen');
     const loginError = document.getElementById('loginError');
     const dropdownMenu = document.getElementById('dropdownMenu');
@@ -423,16 +256,7 @@
     const chatContainer = document.getElementById('chatContainer');
     const chatInput = document.getElementById('chatInput');
     const forgotPasswordModal = document.getElementById('forgotPasswordModal');
-
-    // Обработчик для ссылки "Забыли пароль?" – вешаем сразу после загрузки DOM
     const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-    if (forgotPasswordLink) {
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            const modal = document.getElementById('forgotPasswordModal');
-            if (modal) modal.classList.add('active');
-        });
-    }
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
@@ -451,6 +275,7 @@
             masterKey = doc.exists ? doc.data().key : null;
         } catch(e) { console.error(e); }
     }
+
     async function loadData() {
         const [daysSnap, apptSnap] = await Promise.all([
             db.collection('daysOff').get(),
@@ -465,46 +290,37 @@
             appointments[dateKey].push({...data, docId: doc.id});
         });
     }
-    function loadBlacklist() { return db.collection('blacklist').get().then(snap => { blacklist = snap.docs.map(d => d.id); }); }
 
-    function showLoginScreen() { loginScreen.style.display = 'flex'; appContainer.classList.remove('visible'); loader.classList.add('hidden'); }
-    function hideLoginScreen() { loginScreen.style.display = 'none'; }
-    function logout() { auth.signOut(); hideLoginScreen(); showLoginScreen(); }
-
-    // Замените старый блок "Забыли пароль" на этот:
-// ========== ЗАБЫЛИ ПАРОЛЬ (МОДАЛЬНОЕ ОКНО) ==========
-document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
-    e.preventDefault();
-    forgotPasswordModal.classList.add('active');
-});
-
-document.getElementById('sendResetBtn').addEventListener('click', async () => {
-    const email = document.getElementById('forgotEmail').value.trim();
-    if (!email) {
-        showMessage('Введите email');
-        return;
+    function loadBlacklist() {
+        return db.collection('blacklist').get().then(snap => { blacklist = snap.docs.map(d => d.id); });
     }
-    try {
-        await auth.sendPasswordResetEmail(email);
-        forgotPasswordModal.classList.remove('active');
-        showMessage(' Ссылка для сброса пароля отправлена на ' + email);
-    } catch (err) {
-        showMessage(' Ошибка: ' + err.message);
+
+    function showLoginScreenFn() { loginScreen.style.display = 'flex'; appContainer.classList.remove('visible'); loader.classList.add('hidden'); }
+    function hideLoginScreenFn() { loginScreen.style.display = 'none'; }
+
+    function logout() {
+        auth.signOut();
+        // Сброс состояния
+        selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
+        hideLoginScreenFn();
+        showLoginScreenFn();
     }
-});
 
-document.getElementById('closeForgotModal').addEventListener('click', () => {
-    forgotPasswordModal.classList.remove('active');
-});
-
+    // ---------- АВТОРИЗАЦИЯ (с восстановлением пароля) ----------
     async function initializeAuth() {
         await loadMasterKey();
+
         auth.onAuthStateChanged(async (user) => {
-            if (!user) { currentUser = null; isAdmin = false; showLoginScreen(); return; }
+            if (!user) {
+                currentUser = null;
+                isAdmin = false;
+                showLoginScreenFn();
+                return;
+            }
             currentUser = user;
             const masterDoc = await db.collection('masters').doc(user.uid).get();
             isAdmin = masterDoc.exists;
-            hideLoginScreen();
+            hideLoginScreenFn();
             if (!firstLoadCompleted) {
                 await loadData();
                 await loadBlacklist();
@@ -514,6 +330,8 @@ document.getElementById('closeForgotModal').addEventListener('click', () => {
             updateUIForRole();
             renderAll();
         });
+
+        // Переключение вкладок
         document.getElementById('showLoginTab').addEventListener('click', () => {
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('registerForm').style.display = 'none';
@@ -526,39 +344,84 @@ document.getElementById('closeForgotModal').addEventListener('click', () => {
             document.getElementById('showRegisterTab').classList.add('active');
             document.getElementById('showLoginTab').classList.remove('active');
         });
+
+        // Вход
         document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
             if (!email || !password) { loginError.textContent = 'Введите email и пароль'; loginError.style.display = 'block'; return; }
-            try { await auth.signInWithEmailAndPassword(email, password); }
-            catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (err) {
+                loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block';
+            }
         });
+
+        // Регистрация
         document.getElementById('registerSubmitBtn').addEventListener('click', async () => {
             const email = document.getElementById('registerEmail').value.trim();
             const password = document.getElementById('registerPassword').value.trim();
             if (!email || !password) { loginError.textContent = 'Введите email и пароль'; loginError.style.display = 'block'; return; }
             try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
                 const enteredKey = document.getElementById('registerMasterKey').value.trim();
                 if (enteredKey === masterKey) {
-                    await db.collection('masters').doc(userCredential.user.uid).set({ email: userCredential.user.email });
+                    await db.collection('masters').doc(cred.user.uid).set({ email: cred.user.email });
                 }
-            } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
+            } catch (err) {
+                loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block';
+            }
         });
+
+        // Восстановление пароля (открываем модалку)
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordModal.classList.add('active');
+        });
+        document.getElementById('sendResetBtn').addEventListener('click', async () => {
+            const email = document.getElementById('forgotEmail').value.trim();
+            if (!email) { showMessage('Введите email'); return; }
+            try {
+                await auth.sendPasswordResetEmail(email);
+                forgotPasswordModal.classList.remove('active');
+                showMessage('Ссылка отправлена на ' + email);
+            } catch (err) { showMessage('Ошибка: ' + err.message); }
+        });
+        document.getElementById('closeForgotModal').addEventListener('click', () => forgotPasswordModal.classList.remove('active'));
+
         logoutBtn.addEventListener('click', logout);
     }
 
-    function finishLoading() { setTimeout(() => { loader.classList.add('hidden'); appContainer.classList.add('visible'); }, 500); }
+    function finishLoading() {
+        setTimeout(() => {
+            loader.classList.add('hidden');
+            appContainer.classList.add('visible');
+        }, 500);
+    }
 
     function updateUIForRole() {
         blacklistBtn.style.display = isAdmin ? 'inline-block' : 'none';
-        if (isAdmin) { masterPanel.classList.add('active'); calendarWrapper.classList.add('shifted'); }
-        else { masterPanel.classList.remove('active'); calendarWrapper.classList.remove('shifted'); multiSelectMode = false; selectedDaysSet.clear(); updateMultiButtons(); }
-        if (!isAdmin) { adminBookings.style.display = 'none'; } else { renderAdminBookings(); }
+        if (isAdmin) {
+            masterPanel.classList.add('active');
+            document.getElementById('calendarWrapper').classList.add('shifted');
+        } else {
+            masterPanel.classList.remove('active');
+            document.getElementById('calendarWrapper').classList.remove('shifted');
+            multiSelectMode = false;
+            selectedDaysSet.clear();
+            updateMultiButtons();
+        }
+        if (!isAdmin) adminBookings.style.display = 'none';
+        else renderAdminBookings();
     }
 
-    function renderAll() { renderCalendar(); if (selectedDate) updateUIForSelectedDate(); updateMasterPanelButtons(); }
+    function renderAll() {
+        renderCalendar();
+        if (selectedDate) updateUIForSelectedDate();
+        updateMasterPanelButtons();
+    }
 
+    // Вспомогательные функции (formatDateKey, isToday и т.д.) – они такие же, как в предыдущем коде
     function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
     function isToday(d) { const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
     function isDayOff(dk) { return daysOff.includes(dk); }
