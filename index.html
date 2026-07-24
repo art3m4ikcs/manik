@@ -356,6 +356,14 @@
         <button class="modal-btn btn-secondary" id="closeSearchModal" style="margin-top:10px;">Закрыть</button>
     </div>
 </div>
+<div class="modal" id="clientArchiveModal">
+    <div class="modal-content">
+        <h3 style="color:#b3436e;">Мои записи (архив)</h3>
+        <input type="tel" id="clientArchivePhone" placeholder="Ваш номер телефона">
+        <button class="book-btn" id="showClientArchiveBtn">Показать</button>
+        <button class="modal-btn btn-secondary" id="closeClientArchiveModal" style="margin-top:10px;">Закрыть</button>
+    </div>
+</div>
 
 <div class="modal" id="blacklistModal">
     <div class="modal-content">
@@ -442,6 +450,10 @@
     const searchModal = document.getElementById('searchModal');
     const blacklistModal = document.getElementById('blacklistModal');
 
+    const clientArchiveModal = document.getElementById('clientArchiveModal');
+    let filteredAppointments = {};   // для хранения отфильтрованных записей клиента
+    let clientArchivePhone = null;   // текущий телефон, по которому фильтруем
+
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
     // Универсальные модальные окна
@@ -479,7 +491,9 @@
             else console.warn('settings/master не найден');
         } catch (e) { console.error(e); }
     }
-
+    document.getElementById('closeClientArchiveModal').addEventListener('click', () => {
+    clientArchiveModal.classList.remove('active');
+    });
     auth.onAuthStateChanged(async (user) => {
         if (!firstLoadCompleted) {
             await loadMasterEmail();
@@ -787,121 +801,157 @@
 
     // ========== АРХИВ (исправлено) ==========
     function showArchive() {
-        mainPage.classList.remove('active');
-        archivePage.classList.add('active');
-        yearsSidebar.innerHTML = '';
-        archiveContent.innerHTML = '';
-        buildYearsList();
+        if (isAdmin) {
+            // Мастер видит все записи
+            mainPage.classList.remove('active');
+            archivePage.classList.add('active');
+            yearsSidebar.innerHTML = '';
+            archiveContent.innerHTML = '';
+            filteredAppointments = { ...appointments }; // используем глобальный объект
+            buildYearsList(filteredAppointments);
+        } else {
+            // Клиент: запрашиваем номер телефона
+            clientArchiveModal.classList.add('active');
+        }
     }
-    archiveBtn.addEventListener('click', showArchive);
-    backFromArchive.addEventListener('click', () => {
-        archivePage.classList.remove('active');
-        mainPage.classList.add('active');
-        selectedArchiveYear = null;
-        selectedArchiveMonth = null;
+    document.getElementById('showClientArchiveBtn').addEventListener('click', () => {
+    const phone = document.getElementById('clientArchivePhone').value.trim();
+    if (!phone) return showMessage('Введите номер телефона');
+
+    // Фильтруем appointments по номеру
+    const now = new Date(); now.setHours(0,0,0,0);
+    filteredAppointments = {};
+    Object.keys(appointments).forEach(dateKey => {
+        const apps = appointments[dateKey];
+        apps.forEach(app => {
+            if (app.phone === phone) {
+                if (!filteredAppointments[dateKey]) filteredAppointments[dateKey] = [];
+                filteredAppointments[dateKey].push(app);
+            }
+        });
     });
 
-    function buildYearsList() {
-        const years = new Set();
-        Object.keys(appointments).forEach(dk => years.add(dk.split('-')[0]));
-        yearsSidebar.innerHTML = '';
-        if (years.size === 0) {
-            yearsSidebar.innerHTML = '<small style="color:#b3436e;">Нет записей</small>';
-            archiveContent.innerHTML = '<div class="no-selection-message" style="width:100%; text-align:center;">Нет данных для отображения</div>';
-            return;
-        }
-        const sorted = Array.from(years).sort((a,b)=>b-a);
-        sorted.forEach(y => {
-            const btn = document.createElement('button');
-            btn.textContent = y;
-            btn.dataset.year = y;
-            btn.addEventListener('click', function() {
-                selectedArchiveYear = this.dataset.year;
-                selectedArchiveMonth = null;
-                yearsSidebar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                buildMonthsList(selectedArchiveYear);
-            });
-            yearsSidebar.appendChild(btn);
-        });
-        if (sorted.length) yearsSidebar.querySelector('button').click();
+    clientArchivePhone = phone;
+    clientArchiveModal.classList.remove('active');
+
+    // Переключаемся на страницу архива
+    mainPage.classList.remove('active');
+    archivePage.classList.add('active');
+    yearsSidebar.innerHTML = '';
+    archiveContent.innerHTML = '';
+    buildYearsList(filteredAppointments);
+    });
+    archiveBtn.addEventListener('click', showArchive);
+    backFromArchive.addEventListener('click', () => {
+    archivePage.classList.remove('active');
+    mainPage.classList.add('active');
+    selectedArchiveYear = null;
+    selectedArchiveMonth = null;
+    filteredAppointments = {};
+    clientArchivePhone = null;
+    });
+
+    function buildYearsList(appointmentsObj) {
+    const years = new Set();
+    Object.keys(appointmentsObj).forEach(dk => years.add(dk.split('-')[0]));
+    yearsSidebar.innerHTML = '';
+    if (years.size === 0) {
+        yearsSidebar.innerHTML = '<small style="color:#b3436e;">Нет записей</small>';
+        archiveContent.innerHTML = '<div class="no-selection-message" style="width:100%; text-align:center;">Нет данных</div>';
+        return;
     }
+    const sorted = Array.from(years).sort((a,b)=>b-a);
+    sorted.forEach(y => {
+        const btn = document.createElement('button');
+        btn.textContent = y;
+        btn.dataset.year = y;
+        btn.addEventListener('click', function() {
+            selectedArchiveYear = this.dataset.year;
+            selectedArchiveMonth = null;
+            yearsSidebar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            buildMonthsList(selectedArchiveYear, appointmentsObj);
+        });
+        yearsSidebar.appendChild(btn);
+    });
+    if (sorted.length) yearsSidebar.querySelector('button').click();
+}
 
-    function buildMonthsList(year) {
-        archiveContent.innerHTML = '';
-        const monthsWithApps = new Set();
-        Object.keys(appointments).forEach(dk => {
-            const [y,m] = dk.split('-');
-            if (y === year) monthsWithApps.add(parseInt(m));
+    function buildMonthsList(year, appointmentsObj) {
+    archiveContent.innerHTML = '';
+    const monthsWithApps = new Set();
+    Object.keys(appointmentsObj).forEach(dk => {
+        const [y,m] = dk.split('-');
+        if (y === year) monthsWithApps.add(parseInt(m));
+    });
+    const allMonths = Array.from({length:12}, (_,i)=>i+1);
+    allMonths.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'month-card';
+        card.dataset.month = m;
+        const has = monthsWithApps.has(m);
+        card.innerHTML = `${monthNames[m-1]}<br><small>${has ? 'есть записи' : 'нет записей'}</small>`;
+        card.addEventListener('click', () => {
+            selectedArchiveMonth = m;
+            showCalendarForMonth(year, m, appointmentsObj);
         });
-        const allMonths = Array.from({length:12}, (_,i)=>i+1);
-        allMonths.forEach(m => {
-            const card = document.createElement('div');
-            card.className = 'month-card';
-            card.dataset.month = m;
-            const has = monthsWithApps.has(m);
-            card.innerHTML = `${monthNames[m-1]}<br><small>${has ? 'есть записи' : 'нет записей'}</small>`;
-            card.addEventListener('click', () => {
-                selectedArchiveMonth = m;
-                showCalendarForMonth(year, m);
-            });
-            archiveContent.appendChild(card);
-        });
+        archiveContent.appendChild(card);
+    });
+}
+
+    function showCalendarForMonth(year, month, appointmentsObj) {
+    archiveContent.innerHTML = '';
+    const backBtn = document.createElement('button');
+    backBtn.className = 'back-btn';
+    backBtn.textContent = '← К месяцам';
+    backBtn.addEventListener('click', () => buildMonthsList(year, appointmentsObj));
+    archiveContent.appendChild(backBtn);
+
+    const calDiv = document.createElement('div');
+    calDiv.className = 'days-grid';
+    const firstDay = new Date(year, month-1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    let html = '';
+    for (let i=0; i<firstDay; i++) html += '<div class="day-cell other-month"></div>';
+    for (let d=1; d<=daysInMonth; d++) {
+        const date = new Date(year, month-1, d);
+        const dk = formatDateKey(date);
+        const apps = appointmentsObj[dk] || [];
+        let cls = 'day-cell';
+        if (apps.length) cls += ' has-appointments';
+        html += `<div class="${cls}" data-date="${dk}">${d}</div>`;
     }
+    calDiv.innerHTML = html;
+    archiveContent.appendChild(calDiv);
 
-    function showCalendarForMonth(year, month) {
-        archiveContent.innerHTML = '';
-        const backBtn = document.createElement('button');
-        backBtn.className = 'back-btn';
-        backBtn.textContent = '← К месяцам';
-        backBtn.addEventListener('click', () => buildMonthsList(year));
-        archiveContent.appendChild(backBtn);
+    const detailDiv = document.createElement('div');
+    detailDiv.className = 'archive-detail';
+    detailDiv.id = 'archiveDayDetail';
+    detailDiv.style.display = 'none';
+    archiveContent.appendChild(detailDiv);
 
-        const calDiv = document.createElement('div');
-        calDiv.className = 'days-grid';
-        const firstDay = new Date(year, month-1, 1).getDay();
-        const daysInMonth = new Date(year, month, 0).getDate();
-        let html = '';
-        for (let i=0; i<firstDay; i++) html += '<div class="day-cell other-month"></div>';
-        for (let d=1; d<=daysInMonth; d++) {
-            const date = new Date(year, month-1, d);
-            const dk = formatDateKey(date);
-            const apps = appointments[dk] || [];
-            let cls = 'day-cell';
-            if (apps.length) cls += ' has-appointments';
-            html += `<div class="${cls}" data-date="${dk}">${d}</div>`;
-        }
-        calDiv.innerHTML = html;
-        archiveContent.appendChild(calDiv);
-
-        const detailDiv = document.createElement('div');
-        detailDiv.className = 'archive-detail';
-        detailDiv.id = 'archiveDayDetail';
-        detailDiv.style.display = 'none';
-        archiveContent.appendChild(detailDiv);
-
-        calDiv.querySelectorAll('.day-cell[data-date]').forEach(cell => {
-            cell.addEventListener('click', function() {
-                const dk = this.dataset.date;
-                const dayApps = appointments[dk] || [];
-                const detail = document.getElementById('archiveDayDetail');
-                if (dayApps.length === 0) {
-                    detail.style.display = 'block';
-                    detail.innerHTML = '<h4>Нет записей на этот день</h4>';
-                } else {
-                    const [y,m,d] = dk.split('-').map(Number);
-                    const dateStr = new Date(y,m-1,d).toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
-                    let listHtml = `<h4>${dateStr}</h4>`;
-                    dayApps.forEach(app => {
-                        const end = `${parseInt(app.time)+2}:00`;
-                        listHtml += `<div class="booking-info"><strong>${app.time}-${end}</strong> — ${app.name} (${app.phone})</div>`;
-                    });
-                    detail.innerHTML = listHtml;
-                    detail.style.display = 'block';
-                }
-            });
+    calDiv.querySelectorAll('.day-cell[data-date]').forEach(cell => {
+        cell.addEventListener('click', function() {
+            const dk = this.dataset.date;
+            const dayApps = appointmentsObj[dk] || [];
+            const detail = document.getElementById('archiveDayDetail');
+            if (dayApps.length === 0) {
+                detail.style.display = 'block';
+                detail.innerHTML = '<h4>Нет записей на этот день</h4>';
+            } else {
+                const [y,m,d] = dk.split('-').map(Number);
+                const dateStr = new Date(y,m-1,d).toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
+                let listHtml = `<h4>${dateStr}</h4>`;
+                dayApps.forEach(app => {
+                    const end = `${parseInt(app.time)+2}:00`;
+                    listHtml += `<div class="booking-info"><strong>${app.time}-${end}</strong> — ${app.name} (${app.phone})</div>`;
+                });
+                detail.innerHTML = listHtml;
+                detail.style.display = 'block';
+            }
         });
-    }
+    });
+}
 
     // Поиск окна
     searchWindowBtn.addEventListener('click', () => searchModal.classList.add('active'));
