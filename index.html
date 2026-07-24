@@ -324,12 +324,12 @@
     auth.onAuthStateChanged((user) => {
         if (user) {
             isAdmin = (user.email === MASTER_EMAIL);
-            authStatus.textContent = isAdmin ? '🔑 Мастер' : '👤 Клиент';
+            authStatus.textContent = isAdmin ? ' Мастер' : ' Клиент';
             loginBtn.textContent = isAdmin ? 'Выйти' : 'Войти как мастер';
         } else {
             auth.signInAnonymously().catch(console.error);
             isAdmin = false;
-            authStatus.textContent = '👤 Гость';
+            authStatus.textContent = ' Гость';
             loginBtn.textContent = 'Войти как мастер';
         }
         multiSelectMode = false;
@@ -360,7 +360,7 @@
         });
         if (!found.length) alert('Записей не найдено.');
         else {
-            let msg = '📅 Ваши записи:\n\n';
+            let msg = ' Ваши записи:\n\n';
             found.forEach((app,i) => {
                 const d = new Date(app.dateKey);
                 msg += `${i+1}. ${d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'})} ${app.time}-${parseInt(app.time)+2}:00, ${app.name}\n`;
@@ -498,17 +498,17 @@
 
     function updateUIForSelectedDate() {
         if (!selectedDate || multiSelectMode) {
-            selectedDateDisplay.innerHTML='<span>📅 Дата не выбрана</span>';
+            selectedDateDisplay.innerHTML='<span> Дата не выбрана</span>';
             timeSelectionArea.style.display='none'; bookingFormArea.style.display='none';
             return;
         }
         const dk = formatDateKey(selectedDate);
-        selectedDateDisplay.innerHTML=`<span>📅 ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}</span>`;
+        selectedDateDisplay.innerHTML=`<span> ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}</span>`;
         timeSelectionArea.innerHTML = `<div style="font-weight:600;color:#5c2d43;margin-bottom:5px;">Доступное время (2 часа):</div><div class="time-slots" id="timeSlotsContainer"></div>`;
         timeSlotsContainer = document.getElementById('timeSlotsContainer');
         timeSelectionArea.style.display='block';
         if (isDateInPast(selectedDate)) {
-            timeSelectionArea.innerHTML = '<div class="past-message">⛔ Запись только с завтрашнего дня</div>';
+            timeSelectionArea.innerHTML = '<div class="past-message"> Запись только с завтрашнего дня</div>';
             bookingFormArea.style.display='none'; return;
         }
         if (isDayOff(dk)) { timeSelectionArea.style.display='none'; bookingFormArea.style.display='none'; return; }
@@ -545,7 +545,7 @@
         try {
             await addAppointment(dk, selectedTime, name, phone);
             clientNameInput.value=''; clientPhoneInput.value=''; selectedTime=null;
-            updateUIForSelectedDate(); alert('✅ Записаны!');
+            updateUIForSelectedDate(); alert(' Записаны!');
         } catch(e) { alert('Ошибка: '+e.message); }
     });
 
