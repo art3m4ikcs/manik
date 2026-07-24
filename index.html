@@ -370,7 +370,6 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
     const storage = firebase.storage();
-    db.enablePersistence().catch(() => {});
 
     let masterKey = null;
     let currentMonth = new Date().getMonth();
@@ -463,28 +462,29 @@
     function logout() { auth.signOut(); hideLoginScreen(); showLoginScreen(); }
 
     // Замените старый блок "Забыли пароль" на этот:
+// ========== ЗАБЫЛИ ПАРОЛЬ (МОДАЛЬНОЕ ОКНО) ==========
 document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
-  e.preventDefault();
-  forgotPasswordModal.classList.add('active');
+    e.preventDefault();
+    forgotPasswordModal.classList.add('active');
 });
 
 document.getElementById('sendResetBtn').addEventListener('click', async () => {
-  const email = document.getElementById('forgotEmail').value.trim();
-  if (!email) {
-    showMessage('Введите email');
-    return;
-  }
-  try {
-    await auth.sendPasswordResetEmail(email);
-    forgotPasswordModal.classList.remove('active');
-    showMessage('Ссылка для сброса пароля отправлена на ' + email);
-  } catch (err) {
-    showMessage('Ошибка: ' + err.message);
-  }
+    const email = document.getElementById('forgotEmail').value.trim();
+    if (!email) {
+        showMessage('Введите email');
+        return;
+    }
+    try {
+        await auth.sendPasswordResetEmail(email);
+        forgotPasswordModal.classList.remove('active');
+        showMessage(' Ссылка для сброса пароля отправлена на ' + email);
+    } catch (err) {
+        showMessage(' Ошибка: ' + err.message);
+    }
 });
 
 document.getElementById('closeForgotModal').addEventListener('click', () => {
-  forgotPasswordModal.classList.remove('active');
+    forgotPasswordModal.classList.remove('active');
 });
 
     async function initializeAuth() {
@@ -806,80 +806,102 @@ document.getElementById('closeForgotModal').addEventListener('click', () => {
     document.getElementById('closeArchiveModal').addEventListener('click', ()=> document.getElementById('archiveModal').classList.remove('active'));
 
     // ===== ПОИСК ОКНА =====
+    // ========== ПОИСК ОКНА (ОБНОВЛЁННЫЙ) ==========
     searchWindowBtn.addEventListener('click', () => {
-  const modal = document.createElement('div');
-  modal.className = 'modal active';
-  modal.innerHTML = `
-    <div class="modal-content" style="max-width:500px;">
-      <h3 style="color:#ff7eb3;">🔍 Найти свободное окно</h3>
-      <label>С какой даты искать:</label>
-      <input type="date" id="searchFrom">
-      <label>До какой даты (необязательно):</label>
-      <input type="date" id="searchTo">
-      <label>Подходящее время (можно выбрать несколько):</label>
-      <div class="time-dropdown" id="timeDropdown">
-        <button class="time-dropdown-btn" id="timeDropdownBtn">Любое время</button>
-        <div class="time-dropdown-options" id="timeDropdownOptions" style="display:none; position:absolute; background:rgba(25,25,45,0.95); border-radius:15px; padding:10px; border:1px solid rgba(255,126,179,0.4); z-index:10; width:100%; max-height:200px; overflow-y:auto;">
-          ${allTimeSlots.map(t => `<label style="display:block; padding:8px; color:#ddd; cursor:pointer;"><input type="checkbox" value="${t}"> ${t} – ${parseInt(t)+2}:00</label>`).join('')}
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:500px;">
+            <h3 style="color:#ff7eb3;">🔍 Найти свободное окно</h3>
+            <label style="color:#ddd; font-weight:500; display:block; margin:12px 0 5px;">📅 С какой даты искать</label>
+            <input type="date" id="searchFrom" style="width:100%;">
+            <label style="color:#ddd; font-weight:500; display:block; margin:12px 0 5px;">📅 До какой даты (необязательно)</label>
+            <input type="date" id="searchTo" style="width:100%;">
+            <label style="color:#ddd; font-weight:500; display:block; margin:12px 0 5px;">⏰ Желаемое время (можно выбрать несколько)</label>
+            <div class="time-dropdown" id="timeDropdown" style="position:relative; margin-bottom:15px;">
+                <button class="time-dropdown-btn" id="timeDropdownBtn" style="width:100%; padding:12px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,126,179,0.3); border-radius:15px; color:#ddd; text-align:left; cursor:pointer; transition:0.3s;">
+                    👆 Выберите время
+                </button>
+                <div class="time-dropdown-options" id="timeDropdownOptions" style="display:none; position:absolute; top:100%; left:0; right:0; background:rgba(25,25,45,0.95); backdrop-filter:blur(15px); border-radius:15px; margin-top:5px; padding:10px; z-index:10; border:1px solid rgba(255,126,179,0.4); max-height:200px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    ${allTimeSlots.map(t => `
+                        <label style="display:flex; align-items:center; padding:8px 12px; border-radius:10px; cursor:pointer; transition:0.2s; color:#ddd;"
+                               onmouseover="this.style.background='rgba(255,126,179,0.2)'"
+                               onmouseout="this.style.background='transparent'">
+                            <input type="checkbox" value="${t}" style="margin-right:10px; accent-color:#ff7eb3;">
+                            <span>${t} – ${parseInt(t)+2}:00</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+            <button class="modal-btn btn-primary" id="doSearch" style="width:100%;">Найти доступные окна</button>
+            <div id="searchResults" style="margin-top:20px; max-height:250px; overflow-y:auto;"></div>
+            <button class="modal-btn btn-secondary" id="closeSearch" style="width:100%; margin-top:10px;">Закрыть</button>
         </div>
-      </div>
-      <button class="modal-btn btn-primary" id="doSearch" style="width:100%; margin-top:15px;">Найти</button>
-      <div id="searchResults" style="margin-top:15px; max-height:200px; overflow-y:auto;"></div>
-      <button class="modal-btn btn-secondary" id="closeSearch" style="width:100%; margin-top:10px;">Закрыть</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
+    `;
+    document.body.appendChild(modal);
 
-  const timeDropdownBtn = modal.querySelector('#timeDropdownBtn');
-  const timeDropdownOptions = modal.querySelector('#timeDropdownOptions');
+    const timeDropdownBtn = modal.querySelector('#timeDropdownBtn');
+    const timeDropdownOptions = modal.querySelector('#timeDropdownOptions');
 
-  timeDropdownBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    timeDropdownOptions.style.display = timeDropdownOptions.style.display === 'none' ? 'block' : 'none';
-  });
+    timeDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        timeDropdownOptions.style.display = timeDropdownOptions.style.display === 'block' ? 'none' : 'block';
+    });
 
-  timeDropdownOptions.addEventListener('change', () => {
-    const checked = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
-    timeDropdownBtn.textContent = checked.length ? checked.join(', ') : 'Любое время';
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!modal.querySelector('.time-dropdown').contains(e.target)) {
-      timeDropdownOptions.style.display = 'none';
-    }
-  });
-
-  modal.querySelector('#doSearch').addEventListener('click', () => {
-    const from = modal.querySelector('#searchFrom').valueAsDate || new Date();
-    const to = modal.querySelector('#searchTo').valueAsDate || new Date(from.getFullYear(), from.getMonth() + 2, 0);
-    const desiredTimes = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
-    const results = [];
-    let current = new Date(from);
-    while (current <= to) {
-      if (!isDateInPast(current)) {
-        const dk = formatDateKey(current);
-        if (!isDayOff(dk)) {
-          const booked = getBookedSlotsForDate(current);
-          allTimeSlots.forEach(time => {
-            if (desiredTimes.length && !desiredTimes.includes(time)) return;
-            if (!booked.includes(time) && !isPastSlot(current, time)) {
-              results.push({ date: new Date(current), time });
-            }
-          });
+    // Закрывать список при клике вне
+    document.addEventListener('click', (e) => {
+        if (!modal.querySelector('.time-dropdown').contains(e.target)) {
+            timeDropdownOptions.style.display = 'none';
         }
-      }
-      current.setDate(current.getDate() + 1);
-    }
-    const container = modal.querySelector('#searchResults');
-    container.innerHTML = results.length
-      ? results.map(r => {
-          const d = r.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
-          return `<div style="background:rgba(255,126,179,0.1); padding:8px 12px; border-radius:10px; margin-bottom:6px; color:#ddd;">${d} ${r.time}–${parseInt(r.time)+2}:00</div>`;
-        }).join('')
-      : '<p style="color:#ddd;">Нет свободных окон в выбранном диапазоне.</p>';
-  });
+    });
 
-  modal.querySelector('#closeSearch').addEventListener('click', () => modal.remove());
+    timeDropdownOptions.addEventListener('change', () => {
+        const checked = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
+        timeDropdownBtn.innerHTML = checked.length ? `✅ Выбрано: ${checked.join(', ')}` : '👆 Выберите время';
+    });
+
+    modal.querySelector('#doSearch').addEventListener('click', () => {
+        const from = modal.querySelector('#searchFrom').valueAsDate || new Date();
+        const to = modal.querySelector('#searchTo').valueAsDate || new Date(from.getFullYear(), from.getMonth()+2, 0);
+        const desiredTimes = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
+        const results = [];
+        let current = new Date(from);
+        while (current <= to) {
+            if (!isDateInPast(current)) {
+                const dk = formatDateKey(current);
+                if (!isDayOff(dk)) {
+                    const booked = getBookedSlotsForDate(current);
+                    allTimeSlots.forEach(time => {
+                        if (desiredTimes.length && !desiredTimes.includes(time)) return;
+                        if (!booked.includes(time) && !isPastSlot(current, time)) {
+                            results.push({ date: new Date(current), time });
+                        }
+                    });
+                }
+            }
+            current.setDate(current.getDate() + 1);
+        }
+        const container = modal.querySelector('#searchResults');
+        if (!results.length) {
+            container.innerHTML = '<div style="color:#aaa; text-align:center; padding:20px;">😔 Свободных окон не найдено</div>';
+            return;
+        }
+        container.innerHTML = results.map(r => {
+            const d = r.date.toLocaleDateString('ru-RU', { day:'numeric', month:'long', weekday:'short' });
+            return `
+                <div style="background:rgba(255,126,179,0.08); padding:12px 15px; border-radius:12px; margin-bottom:8px;
+                            border-left:3px solid #ff7eb3; color:#ddd; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="color:#ff7eb3; font-weight:600;">${d}</div>
+                        <div style="font-size:0.95rem; margin-top:3px;">${r.time} – ${parseInt(r.time)+2}:00</div>
+                    </div>
+                    <span style="color:#ff7eb3; font-size:1.2rem;">✓</span>
+                </div>
+            `;
+        }).join('');
+    });
+
+    modal.querySelector('#closeSearch').addEventListener('click', () => modal.remove());
 });
 
     // ===== ЧЁРНЫЙ СПИСОК =====
