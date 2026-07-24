@@ -533,7 +533,7 @@
         const multiSelectBtn = document.getElementById('multiSelectBtn');
         const applyMultiBtn = document.getElementById('applyMultiBtn');
         const timeSelectionArea = document.getElementById('timeSelectionArea');
-        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+        let timeSlotsContainer = document.getElementById('timeSlotsContainer');
         const bookingFormArea = document.getElementById('bookingFormArea');
         const bookBtn = document.getElementById('bookBtn');
         const clientNameInput = document.getElementById('clientName');
@@ -841,9 +841,16 @@
 
         // ---------- ОБНОВЛЕНИЕ ВЫБРАННОЙ ДАТЫ ----------
         function updateUIForSelectedDate() {
-            if (!selectedDate || multiSelectMode) {
-                selectedDateDisplay.innerHTML = '<span>📅 Дата не выбрана</span>';
-                timeSelectionArea.style.display = 'none';
+            // Восстанавливаем стандартную структуру блока выбора времени
+            timeSelectionArea.innerHTML = `
+            <div style="font-weight: 600; color: #5c2d43; margin-bottom: 5px;">Доступное время (2 часа):</div>
+            <div class="time-slots" id="timeSlotsContainer"></div>
+            `;
+            timeSlotsContainer = document.getElementById('timeSlotsContainer');
+            timeSelectionArea.style.display = 'block';
+
+            if (isDateInPast(selectedDate)) {
+                timeSelectionArea.innerHTML = '<div class="past-message">⛔ Запись возможна только начиная с завтрашнего дня</div>';
                 bookingFormArea.style.display = 'none';
                 return;
             }
