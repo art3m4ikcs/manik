@@ -707,10 +707,13 @@
 
         // Функция проверки, что дата не раньше завтрашнего дня
         function isDateInPast(date) {
+            // Завтра, 00:00:00
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             tomorrow.setHours(0, 0, 0, 0);
-            return date < tomorrow;
+            // Выбранная дата без времени
+            const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            return dateOnly < tomorrow;
         }
 
         function renderAll() {
