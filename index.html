@@ -72,6 +72,21 @@
         .tab-btn { flex:1; padding:10px; border-radius:20px; border:none; font-weight:600; cursor:pointer; transition:all 0.3s; }
         .tab-btn.active { background:linear-gradient(135deg, #ff7eb3, #ff758c); color:white; }
         .tab-btn:not(.active) { background:rgba(255,255,255,0.1); color:#ddd; }
+        /* Архив */
+        .archive-container { display:flex; gap:20px; max-height:70vh; }
+        .archive-years-panel { width:90px; background:rgba(255,255,255,0.03); border-radius:20px; padding:15px; overflow-y:auto; flex-shrink:0; }
+        .archive-years-panel button { display:block; width:100%; background:transparent; border:none; color:#ccc; padding:10px; border-radius:12px; margin-bottom:6px; cursor:pointer; font-weight:500; transition:all 0.2s; }
+        .archive-years-panel button:hover, .archive-years-panel button.active { background:rgba(255,126,179,0.2); color:#ff7eb3; }
+        .archive-main { flex:1; overflow-y:auto; }
+        .archive-months-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap:10px; }
+        .archive-month-card { background:rgba(255,255,255,0.05); border-radius:16px; padding:20px 10px; text-align:center; cursor:pointer; color:#ddd; transition:all 0.3s; border:1px solid transparent; }
+        .archive-month-card:hover { background:rgba(255,126,179,0.15); border-color:#ff7eb3; }
+        .archive-month-card.has-records { border-color:#ff7eb3; }
+        .archive-calendar { margin-top:15px; }
+        .archive-detail { margin-top:15px; background:rgba(255,126,179,0.05); border-radius:16px; padding:15px; }
+        .archive-day-cell { aspect-ratio:1/1; background:rgba(255,255,255,0.05); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:500; color:#eee; font-size:0.9rem; cursor:pointer; transition:all 0.2s; border:1px solid transparent; position:relative; }
+        .archive-day-cell.has-appointments { background:rgba(255,126,179,0.2); border-color:#ff7eb3; }
+        .archive-day-cell:hover { background:rgba(255,126,179,0.3); }
     </style>
 </head>
 <body>
@@ -102,6 +117,7 @@
     </div>
 </div>
 
+<!-- Модальное окно восстановления пароля -->
 <div class="modal" id="forgotPasswordModal">
     <div class="modal-content">
         <h3 style="color:#ff7eb3;">Восстановление пароля</h3>
@@ -162,13 +178,14 @@
     </div>
 </div>
 
+<!-- Дополнительные модальные окна -->
 <div class="modal" id="messageModal">
     <div class="modal-content"><p id="messageText" style="color:#ddd;"></p><button class="modal-btn btn-primary" id="closeMessageModal">OK</button></div>
 </div>
 <div class="modal" id="aiChatModal">
     <div class="modal-content" style="max-width:500px;">
         <h3 style="color:#ff7eb3;">🤖 ИИ консультант по маникюру</h3>
-        <div class="chat-container" id="chatContainer"></div>
+        <div class="chat-container" id="chatContainer" style="height:300px; overflow-y:auto; margin:15px 0; padding:10px; background:rgba(0,0,0,0.2); border-radius:15px;"></div>
         <input type="text" id="chatInput" placeholder="Опишите, что хотите...">
         <button class="modal-btn btn-primary" id="sendChatBtn">Спросить</button>
         <button class="modal-btn btn-secondary" id="closeAiChatBtn">Закрыть</button>
@@ -300,7 +317,6 @@
 
     function logout() {
         auth.signOut();
-        // Сброс состояния
         selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
         hideLoginScreenFn();
         showLoginScreenFn();
@@ -331,7 +347,6 @@
             renderAll();
         });
 
-        // Переключение вкладок
         document.getElementById('showLoginTab').addEventListener('click', () => {
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('registerForm').style.display = 'none';
@@ -345,19 +360,14 @@
             document.getElementById('showLoginTab').classList.remove('active');
         });
 
-        // Вход
         document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
             if (!email || !password) { loginError.textContent = 'Введите email и пароль'; loginError.style.display = 'block'; return; }
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-            } catch (err) {
-                loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block';
-            }
+            try { await auth.signInWithEmailAndPassword(email, password); }
+            catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
         });
 
-        // Регистрация
         document.getElementById('registerSubmitBtn').addEventListener('click', async () => {
             const email = document.getElementById('registerEmail').value.trim();
             const password = document.getElementById('registerPassword').value.trim();
@@ -368,12 +378,10 @@
                 if (enteredKey === masterKey) {
                     await db.collection('masters').doc(cred.user.uid).set({ email: cred.user.email });
                 }
-            } catch (err) {
-                loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block';
-            }
+            } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
         });
 
-        // Восстановление пароля (открываем модалку)
+        // === ВОССТАНОВЛЕНИЕ ПАРОЛЯ (ИСПРАВЛЕНО) ===
         forgotPasswordLink.addEventListener('click', (e) => {
             e.preventDefault();
             forgotPasswordModal.classList.add('active');
@@ -415,13 +423,7 @@
         else renderAdminBookings();
     }
 
-    function renderAll() {
-        renderCalendar();
-        if (selectedDate) updateUIForSelectedDate();
-        updateMasterPanelButtons();
-    }
-
-    // Вспомогательные функции (formatDateKey, isToday и т.д.) – они такие же, как в предыдущем коде
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
     function isToday(d) { const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
     function isDayOff(dk) { return daysOff.includes(dk); }
@@ -429,74 +431,103 @@
     function isPastSlot(d,time) { if(!isToday(d)) return false; const [h,m]=time.split(':').map(Number); const end=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h+2,m); return end <= new Date(); }
     function isDateInPast(d) { const tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1); tomorrow.setHours(0,0,0,0); return new Date(d.getFullYear(),d.getMonth(),d.getDate()) < tomorrow; }
 
+    function renderAll() { renderCalendar(); if (selectedDate) updateUIForSelectedDate(); updateMasterPanelButtons(); }
+
+    initializeAuth();
+        // ========== КАЛЕНДАРЬ ==========
     function renderCalendar() {
         monthYearEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-        const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
         const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
         let html = '';
-        for (let i = firstDay-1; i >= 0; i--) html += `<div class="day-cell other-month">${prevMonthDays - i}</div>`;
-        for (let d=1; d<=daysInMonth; d++) {
+        for (let i = firstDay - 1; i >= 0; i--) html += `<div class="day-cell other-month">${prevMonthDays - i}</div>`;
+        for (let d = 1; d <= daysInMonth; d++) {
             const date = new Date(currentYear, currentMonth, d);
             const dk = formatDateKey(date);
             let cls = 'day-cell';
             if (isToday(date)) cls += ' today';
-            if (!multiSelectMode && selectedDate && formatDateKey(selectedDate)===dk) cls += ' selected';
+            if (!multiSelectMode && selectedDate && formatDateKey(selectedDate) === dk) cls += ' selected';
             if (multiSelectMode && selectedDaysSet.has(dk)) cls += ' selected-multi';
             if (isDayOff(dk)) cls += ' day-off';
             if (appointments[dk]?.length) cls += ' has-appointments';
-            html += `<div class="${cls}" data-date="${dk}" style="animation-delay:${d*0.02}s">${d}</div>`;
+            html += `<div class="${cls}" data-date="${dk}" style="animation-delay:${d * 0.02}s">${d}</div>`;
         }
         const total = firstDay + daysInMonth;
-        const rem = total%7 ? 7 - total%7 : 0;
-        for (let d=1; d<=rem; d++) html += `<div class="day-cell other-month">${d}</div>`;
+        const rem = total % 7 ? 7 - total % 7 : 0;
+        for (let d = 1; d <= rem; d++) html += `<div class="day-cell other-month">${d}</div>`;
         daysGridEl.innerHTML = html;
         document.querySelectorAll('.day-cell[data-date]').forEach(cell => {
-            cell.addEventListener('click', function() {
+            cell.addEventListener('click', function () {
                 const dk = this.dataset.date;
                 if (multiSelectMode && isAdmin) {
-                    if (selectedDaysSet.has(dk)) selectedDaysSet.delete(dk); else selectedDaysSet.add(dk);
-                    renderCalendar(); updateMultiButtons(); return;
+                    if (selectedDaysSet.has(dk)) selectedDaysSet.delete(dk);
+                    else selectedDaysSet.add(dk);
+                    renderCalendar();
+                    updateMultiButtons();
+                    return;
                 }
-                const [y,m,d] = dk.split('-').map(Number);
-                selectedDate = new Date(y,m-1,d); selectedTime = null;
-                updateUIForSelectedDate(); renderCalendar(); updateMasterPanelButtons();
+                const [y, m, d] = dk.split('-').map(Number);
+                selectedDate = new Date(y, m - 1, d);
+                selectedTime = null;
+                updateUIForSelectedDate();
+                renderCalendar();
+                updateMasterPanelButtons();
             });
         });
     }
 
     function updateUIForSelectedDate() {
         if (!selectedDate || multiSelectMode) {
-            selectedDateDisplay.innerHTML = '📅 Дата не выбрана'; timeSelectionArea.style.display = 'none'; bookingFormArea.style.display = 'none'; return;
+            selectedDateDisplay.innerHTML = '📅 Дата не выбрана';
+            timeSelectionArea.style.display = 'none';
+            bookingFormArea.style.display = 'none';
+            return;
         }
         const dk = formatDateKey(selectedDate);
-        selectedDateDisplay.innerHTML = `📅 ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}`;
+        selectedDateDisplay.innerHTML = `📅 ${selectedDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}`;
         timeSelectionArea.innerHTML = '<div style="font-weight:600;color:#ff7eb3;margin-bottom:5px;">Доступное время (2 часа):</div><div class="time-slots" id="timeSlotsContainer"></div>';
         timeSlotsContainer = document.getElementById('timeSlotsContainer');
         timeSelectionArea.style.display = 'block';
-        if (isDateInPast(selectedDate)) { timeSelectionArea.innerHTML = '<div style="color:#ff7eb3;text-align:center;">⛔ Запись только с завтрашнего дня</div>'; bookingFormArea.style.display = 'none'; return; }
-        if (isDayOff(dk)) { timeSelectionArea.style.display = 'none'; bookingFormArea.style.display = 'none'; return; }
+        if (isDateInPast(selectedDate)) {
+            timeSelectionArea.innerHTML = '<div style="color:#ff7eb3;text-align:center;">⛔ Запись только с завтрашнего дня</div>';
+            bookingFormArea.style.display = 'none';
+            return;
+        }
+        if (isDayOff(dk)) {
+            timeSelectionArea.style.display = 'none';
+            bookingFormArea.style.display = 'none';
+            return;
+        }
         const booked = getBookedSlotsForDate(selectedDate);
         let slotsHtml = '';
         allTimeSlots.forEach(time => {
-            const end = `${parseInt(time)+2}:00`, isB = booked.includes(time), past = isPastSlot(selectedDate, time);
+            const end = `${parseInt(time) + 2}:00`;
+            const isB = booked.includes(time);
+            const past = isPastSlot(selectedDate, time);
             let cls = 'time-slot';
-            if (isB) cls+=' booked'; else if (past) cls+=' unavailable';
-            if (selectedTime===time && !isB && !past) cls+=' selected-time';
+            if (isB) cls += ' booked';
+            else if (past) cls += ' unavailable';
+            if (selectedTime === time && !isB && !past) cls += ' selected-time';
             slotsHtml += `<div class="${cls}" data-time="${time}">${time}<small> до ${end}</small></div>`;
         });
         timeSlotsContainer.innerHTML = slotsHtml;
-        if (selectedTime && (booked.includes(selectedTime) || isPastSlot(selectedDate,selectedTime))) selectedTime=null;
+        if (selectedTime && (booked.includes(selectedTime) || isPastSlot(selectedDate, selectedTime))) selectedTime = null;
         bookingFormArea.style.display = selectedTime ? 'flex' : 'none';
-        document.querySelectorAll('.time-slot:not(.booked):not(.unavailable)').forEach(s=>{
-            s.addEventListener('click', function(){
+        document.querySelectorAll('.time-slot:not(.booked):not(.unavailable)').forEach(s => {
+            s.addEventListener('click', function () {
                 const t = this.dataset.time;
-                if (getBookedSlotsForDate(selectedDate).includes(t) || isPastSlot(selectedDate,t)) { updateUIForSelectedDate(); return; }
-                selectedTime = t; updateUIForSelectedDate();
+                if (getBookedSlotsForDate(selectedDate).includes(t) || isPastSlot(selectedDate, t)) {
+                    updateUIForSelectedDate();
+                    return;
+                }
+                selectedTime = t;
+                updateUIForSelectedDate();
             });
         });
     }
 
+    // ========== ПАНЕЛЬ МАСТЕРА ==========
     function updateMasterPanelButtons() {
         if (!isAdmin) return;
         const dk = selectedDate ? formatDateKey(selectedDate) : null;
@@ -516,36 +547,58 @@
     toggleDayOffBtn.addEventListener('click', async () => {
         if (!selectedDate) return;
         const dk = formatDateKey(selectedDate);
-        if (isDayOff(dk)) await db.collection('daysOff').doc(dk).delete(); else await db.collection('daysOff').doc(dk).set({});
-    });
-    multiSelectBtn.addEventListener('click', () => {
-        multiSelectMode = !multiSelectMode;
-        if (!multiSelectMode) { selectedDaysSet.clear(); selectedDate = null; } else { selectedDate = null; selectedTime = null; }
-        timeSelectionArea.style.display = 'none'; bookingFormArea.style.display = 'none';
-        renderCalendar(); updateMasterPanelButtons(); updateUIForSelectedDate();
-    });
-    applyMultiOffBtn.addEventListener('click', async () => {
-        for (const dk of selectedDaysSet) { if (!isDayOff(dk)) await db.collection('daysOff').doc(dk).set({}); }
-        selectedDaysSet.clear(); multiSelectMode = false; renderCalendar(); updateMasterPanelButtons();
-    });
-    applyMultiWorkBtn.addEventListener('click', async () => {
-        for (const dk of selectedDaysSet) { if (isDayOff(dk)) await db.collection('daysOff').doc(dk).delete(); }
-        selectedDaysSet.clear(); multiSelectMode = false; renderCalendar(); updateMasterPanelButtons();
+        if (isDayOff(dk)) await db.collection('daysOff').doc(dk).delete();
+        else await db.collection('daysOff').doc(dk).set({});
     });
 
+    multiSelectBtn.addEventListener('click', () => {
+        multiSelectMode = !multiSelectMode;
+        if (!multiSelectMode) { selectedDaysSet.clear(); selectedDate = null; }
+        else { selectedDate = null; selectedTime = null; }
+        timeSelectionArea.style.display = 'none';
+        bookingFormArea.style.display = 'none';
+        renderCalendar();
+        updateMasterPanelButtons();
+        updateUIForSelectedDate();
+    });
+
+    applyMultiOffBtn.addEventListener('click', async () => {
+        for (const dk of selectedDaysSet) {
+            if (!isDayOff(dk)) await db.collection('daysOff').doc(dk).set({});
+        }
+        selectedDaysSet.clear();
+        multiSelectMode = false;
+        renderCalendar();
+        updateMasterPanelButtons();
+    });
+
+    applyMultiWorkBtn.addEventListener('click', async () => {
+        for (const dk of selectedDaysSet) {
+            if (isDayOff(dk)) await db.collection('daysOff').doc(dk).delete();
+        }
+        selectedDaysSet.clear();
+        multiSelectMode = false;
+        renderCalendar();
+        updateMasterPanelButtons();
+    });
+
+    // ========== ЗАПИСЬ КЛИЕНТА ==========
     bookBtn.addEventListener('click', async () => {
         if (!selectedDate || !selectedTime) return;
         const dk = formatDateKey(selectedDate);
         if (isDateInPast(selectedDate)) { showMessage('Нельзя записаться на прошедший день.'); return; }
         if (isDayOff(dk)) { showMessage('Выходной.'); return; }
-        const name = clientNameInput.value.trim(), phoneRaw = clientPhoneInput.value.trim(), phone = phoneRaw.replace(/\D/g,'');
+        const name = clientNameInput.value.trim();
+        const phoneRaw = clientPhoneInput.value.trim();
+        const phone = phoneRaw.replace(/\D/g, '');
         if (!name || !phoneRaw) { showMessage('Введите имя и телефон.'); return; }
         if (!/^\d{11}$/.test(phone)) { showMessage('Номер должен содержать 11 цифр.'); return; }
         if (blacklist.includes(phone)) { showMessage('Этот номер заблокирован.'); return; }
         const existing = hasAppointmentWithinWeek(phone);
         if (existing) {
             const d = new Date(existing.dateKey);
-            showMessage(`Вы уже записаны на ${d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'})} в ${existing.time}-${parseInt(existing.time)+2}:00.`);
+            const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
+            showMessage(`Вы уже записаны на ${dateStr} в ${existing.time}-${parseInt(existing.time) + 2}:00.`);
             return;
         }
         const note = clientNoteInput.value.trim();
@@ -553,42 +606,57 @@
         if (designFileInput.files[0]) {
             const file = designFileInput.files[0];
             const storageRef = storage.ref(`designs/${dk}_${selectedTime}_${Date.now()}`);
-            await storageRef.put(file); designUrl = await storageRef.getDownloadURL();
+            await storageRef.put(file);
+            designUrl = await storageRef.getDownloadURL();
         }
         try {
-            await db.collection('appointments').doc(`${dk}_${selectedTime}`).set({ time: selectedTime, name, phone, note, designUrl, userId: currentUser?.uid || 'unknown' });
-            clientNameInput.value=''; clientPhoneInput.value=''; clientNoteInput.value=''; designFileInput.value=''; selectedTime=null;
-            updateUIForSelectedDate(); showMessage('✅ Вы записаны!');
-        } catch(e) { showMessage('Ошибка: '+e.message); }
+            await db.collection('appointments').doc(`${dk}_${selectedTime}`).set({
+                time: selectedTime, name, phone, note, designUrl, userId: currentUser?.uid || 'unknown'
+            });
+            clientNameInput.value = ''; clientPhoneInput.value = ''; clientNoteInput.value = '';
+            designFileInput.value = ''; selectedTime = null;
+            updateUIForSelectedDate();
+            showMessage('✅ Вы записаны!');
+        } catch (e) { showMessage('Ошибка: ' + e.message); }
     });
 
     function hasAppointmentWithinWeek(phone) {
-        const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1); tomorrow.setHours(0,0,0,0);
-        const weekLater = new Date(tomorrow); weekLater.setDate(weekLater.getDate()+7);
+        const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0, 0, 0, 0);
+        const weekLater = new Date(tomorrow); weekLater.setDate(weekLater.getDate() + 7);
         for (const [dateKey, apps] of Object.entries(appointments)) {
-            const [y,m,d] = dateKey.split('-').map(Number);
-            const date = new Date(y,m-1,d);
-            if (date >= tomorrow && date <= weekLater) for (const app of apps) if (app.phone === phone) return app;
+            const [y, m, d] = dateKey.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            if (date >= tomorrow && date <= weekLater) {
+                for (const app of apps) if (app.phone === phone) return app;
+            }
         }
         return null;
     }
 
+    // ========== ИИ ЧАТ ==========
     aiChatBtn.addEventListener('click', () => aiChatModal.classList.add('active'));
     document.getElementById('closeAiChatBtn').addEventListener('click', () => aiChatModal.classList.remove('active'));
     document.getElementById('sendChatBtn').addEventListener('click', sendChat);
-    chatInput.addEventListener('keypress', (e) => { if (e.key==='Enter') sendChat(); });
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChat(); });
     function sendChat() {
-        const msg = chatInput.value.trim(); if (!msg) return;
-        addChatMessage('user', msg); chatInput.value = '';
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+        addChatMessage('user', msg);
+        chatInput.value = '';
         const askAI = firebase.functions().httpsCallable('askAI');
-        askAI({ message: msg }).then(result => addChatMessage('bot', result.data.reply)).catch(err => addChatMessage('bot', 'Ошибка: ' + err.message));
+        askAI({ message: msg })
+            .then(result => addChatMessage('bot', result.data.reply))
+            .catch(err => addChatMessage('bot', 'Ошибка: ' + err.message));
     }
     function addChatMessage(type, text) {
-        const div = document.createElement('div'); div.className = `message ${type==='user'?'user-message':'bot-message'}`;
-        div.textContent = text; chatContainer.appendChild(div); chatContainer.scrollTop = chatContainer.scrollHeight;
+        const div = document.createElement('div');
+        div.className = `message ${type === 'user' ? 'user-message' : 'bot-message'}`;
+        div.textContent = text;
+        chatContainer.appendChild(div);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ===== АРХИВ (НОВЫЙ ДИЗАЙН) =====
+    // ========== АРХИВ ==========
     const archiveModal = document.createElement('div'); archiveModal.className = 'modal'; archiveModal.id = 'archiveModal';
     archiveModal.innerHTML = `
         <div class="modal-content" style="max-width:850px;">
@@ -607,32 +675,38 @@
     let filteredAppointments = {};
     function openArchive(phone = null) {
         if (phone) {
-            const cleaned = phone.replace(/\D/g,'');
+            const cleaned = phone.replace(/\D/g, '');
             filteredAppointments = {};
             Object.entries(appointments).forEach(([dk, apps]) => {
                 const filtered = apps.filter(a => a.phone === cleaned);
                 if (filtered.length) filteredAppointments[dk] = filtered;
             });
-        } else { filteredAppointments = {...appointments}; }
-        buildArchiveYears(); document.getElementById('archiveModal').classList.add('active');
+        } else { filteredAppointments = { ...appointments }; }
+        buildArchiveYears();
+        document.getElementById('archiveModal').classList.add('active');
     }
     function buildArchiveYears() {
         const years = new Set(); Object.keys(filteredAppointments).forEach(dk => years.add(dk.split('-')[0]));
         const container = document.getElementById('archiveYears'); container.innerHTML = '';
         if (!years.size) { container.innerHTML = '<span style="color:#ddd;">Нет записей</span>'; return; }
-        Array.from(years).sort((a,b)=>b-a).forEach(y => {
+        Array.from(years).sort((a, b) => b - a).forEach(y => {
             const btn = document.createElement('button'); btn.textContent = y;
-            btn.addEventListener('click', () => { document.querySelectorAll('#archiveYears button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); buildArchiveMonths(y); });
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#archiveYears button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                buildArchiveMonths(y);
+            });
             container.appendChild(btn);
         });
         if (years.size) container.querySelector('button').click();
     }
     function buildArchiveMonths(year) {
-        const monthsWithApps = new Set(); Object.keys(filteredAppointments).forEach(dk => { const [y,m] = dk.split('-'); if (y===year) monthsWithApps.add(parseInt(m)); });
+        const monthsWithApps = new Set();
+        Object.keys(filteredAppointments).forEach(dk => { const [y, m] = dk.split('-'); if (y === year) monthsWithApps.add(parseInt(m)); });
         const container = document.getElementById('archiveMonths'); container.innerHTML = '';
         for (let m = 1; m <= 12; m++) {
             const card = document.createElement('div'); card.className = 'archive-month-card' + (monthsWithApps.has(m) ? ' has-records' : '');
-            card.innerHTML = `<div>${monthNames[m-1]}</div><small style="color:${monthsWithApps.has(m)?'#ff7eb3':'#888'}">${monthsWithApps.has(m) ? 'есть записи' : 'нет записей'}</small>`;
+            card.innerHTML = `<div>${monthNames[m - 1]}</div><small style="color:${monthsWithApps.has(m) ? '#ff7eb3' : '#888'}">${monthsWithApps.has(m) ? 'есть записи' : 'нет записей'}</small>`;
             card.addEventListener('click', () => showArchiveCalendar(year, m)); container.appendChild(card);
         }
         document.getElementById('archiveCalendar').innerHTML = ''; document.getElementById('archiveDetail').innerHTML = '';
@@ -640,25 +714,25 @@
     function showArchiveCalendar(year, month) {
         const calDiv = document.getElementById('archiveCalendar'); const detailDiv = document.getElementById('archiveDetail');
         calDiv.innerHTML = ''; detailDiv.innerHTML = '';
-        const firstDay = new Date(year, month-1, 1).getDay(); const daysInMonth = new Date(year, month, 0).getDate();
+        const firstDay = new Date(year, month - 1, 1).getDay(); const daysInMonth = new Date(year, month, 0).getDate();
         let html = '<div style="display:grid; grid-template-columns:repeat(7,1fr); gap:5px;">';
-        for (let i=0; i<firstDay; i++) html += '<div></div>';
-        for (let d=1; d<=daysInMonth; d++) {
-            const dateKey = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        for (let i = 0; i < firstDay; i++) html += '<div></div>';
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const apps = filteredAppointments[dateKey] || [];
-            html += `<div class="archive-day-cell${apps.length?' has-appointments':''}" data-date="${dateKey}">${d}</div>`;
+            html += `<div class="archive-day-cell${apps.length ? ' has-appointments' : ''}" data-date="${dateKey}">${d}</div>`;
         }
         html += '</div>'; calDiv.innerHTML = html;
         calDiv.querySelectorAll('[data-date]').forEach(el => {
-            el.addEventListener('click', function() {
+            el.addEventListener('click', function () {
                 const dk = this.dataset.date; const apps = filteredAppointments[dk] || [];
                 if (!apps.length) { detailDiv.innerHTML = '<p style="color:#ddd;">Нет записей</p>'; return; }
-                const [y,m,d] = dk.split('-').map(Number);
-                const dateStr = new Date(y,m-1,d).toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
+                const [y, m, d] = dk.split('-').map(Number);
+                const dateStr = new Date(y, m - 1, d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
                 let list = `<h4 style="color:#ff7eb3;">${dateStr}</h4>`;
                 apps.forEach(app => {
                     list += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:6px; color:#ddd;">
-                        <div><strong>${app.time}-${parseInt(app.time)+2}:00</strong> — ${app.name} (${app.phone})</div>
+                        <div><strong>${app.time}-${parseInt(app.time) + 2}:00</strong> — ${app.name} (${app.phone})</div>
                         ${app.note ? `<div style="color:#aaa;">📝 ${app.note}</div>` : ''}
                         ${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#ff7eb3;">📎 Дизайн</a>` : ''}</div>`;
                 });
@@ -676,167 +750,158 @@
             phoneModal.querySelector('.close-phone-modal').addEventListener('click', () => phoneModal.remove());
         }
     });
-    document.getElementById('closeArchiveModal').addEventListener('click', ()=> document.getElementById('archiveModal').classList.remove('active'));
+    document.getElementById('closeArchiveModal').addEventListener('click', () => document.getElementById('archiveModal').classList.remove('active'));
 
-    // ===== ПОИСК ОКНА =====
-    // ========== ПОИСК ОКНА (ОБНОВЛЁННЫЙ) ==========
+    // ========== ПОИСК ОКНА ==========
     searchWindowBtn.addEventListener('click', () => {
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width:500px;">
-            <h3 style="color:#ff7eb3;">🔍 Найти свободное окно</h3>
-            <label style="color:#ddd; font-weight:500; display:block; margin:12px 0 5px;">📅 С какой даты искать</label>
-            <input type="date" id="searchFrom" style="width:100%;">
-            <label style="color:#ddd; font-weight:500; display:block; margin:12px 0 5px;">📅 До какой даты (необязательно)</label>
-            <input type="date" id="searchTo" style="width:100%;">
-            <label style="color:#ddd; font-weight:500; display:block; margin:12px 0 5px;">⏰ Желаемое время (можно выбрать несколько)</label>
-            <div class="time-dropdown" id="timeDropdown" style="position:relative; margin-bottom:15px;">
-                <button class="time-dropdown-btn" id="timeDropdownBtn" style="width:100%; padding:12px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,126,179,0.3); border-radius:15px; color:#ddd; text-align:left; cursor:pointer; transition:0.3s;">
-                    👆 Выберите время
-                </button>
-                <div class="time-dropdown-options" id="timeDropdownOptions" style="display:none; position:absolute; top:100%; left:0; right:0; background:rgba(25,25,45,0.95); backdrop-filter:blur(15px); border-radius:15px; margin-top:5px; padding:10px; z-index:10; border:1px solid rgba(255,126,179,0.4); max-height:200px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                    ${allTimeSlots.map(t => `
-                        <label style="display:flex; align-items:center; padding:8px 12px; border-radius:10px; cursor:pointer; transition:0.2s; color:#ddd;"
-                               onmouseover="this.style.background='rgba(255,126,179,0.2)'"
-                               onmouseout="this.style.background='transparent'">
-                            <input type="checkbox" value="${t}" style="margin-right:10px; accent-color:#ff7eb3;">
-                            <span>${t} – ${parseInt(t)+2}:00</span>
-                        </label>
-                    `).join('')}
-                </div>
-            </div>
-            <button class="modal-btn btn-primary" id="doSearch" style="width:100%;">Найти доступные окна</button>
-            <div id="searchResults" style="margin-top:20px; max-height:250px; overflow-y:auto;"></div>
-            <button class="modal-btn btn-secondary" id="closeSearch" style="width:100%; margin-top:10px;">Закрыть</button>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    const timeDropdownBtn = modal.querySelector('#timeDropdownBtn');
-    const timeDropdownOptions = modal.querySelector('#timeDropdownOptions');
-
-    timeDropdownBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        timeDropdownOptions.style.display = timeDropdownOptions.style.display === 'block' ? 'none' : 'block';
-    });
-
-    // Закрывать список при клике вне
-    document.addEventListener('click', (e) => {
-        if (!modal.querySelector('.time-dropdown').contains(e.target)) {
-            timeDropdownOptions.style.display = 'none';
-        }
-    });
-
-    timeDropdownOptions.addEventListener('change', () => {
-        const checked = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
-        timeDropdownBtn.innerHTML = checked.length ? `✅ Выбрано: ${checked.join(', ')}` : '👆 Выберите время';
-    });
-
-    modal.querySelector('#doSearch').addEventListener('click', () => {
-        const from = modal.querySelector('#searchFrom').valueAsDate || new Date();
-        const to = modal.querySelector('#searchTo').valueAsDate || new Date(from.getFullYear(), from.getMonth()+2, 0);
-        const desiredTimes = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
-        const results = [];
-        let current = new Date(from);
-        while (current <= to) {
-            if (!isDateInPast(current)) {
-                const dk = formatDateKey(current);
-                if (!isDayOff(dk)) {
-                    const booked = getBookedSlotsForDate(current);
-                    allTimeSlots.forEach(time => {
-                        if (desiredTimes.length && !desiredTimes.includes(time)) return;
-                        if (!booked.includes(time) && !isPastSlot(current, time)) {
-                            results.push({ date: new Date(current), time });
-                        }
-                    });
-                }
-            }
-            current.setDate(current.getDate() + 1);
-        }
-        const container = modal.querySelector('#searchResults');
-        if (!results.length) {
-            container.innerHTML = '<div style="color:#aaa; text-align:center; padding:20px;">😔 Свободных окон не найдено</div>';
-            return;
-        }
-        container.innerHTML = results.map(r => {
-            const d = r.date.toLocaleDateString('ru-RU', { day:'numeric', month:'long', weekday:'short' });
-            return `
-                <div style="background:rgba(255,126,179,0.08); padding:12px 15px; border-radius:12px; margin-bottom:8px;
-                            border-left:3px solid #ff7eb3; color:#ddd; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="color:#ff7eb3; font-weight:600;">${d}</div>
-                        <div style="font-size:0.95rem; margin-top:3px;">${r.time} – ${parseInt(r.time)+2}:00</div>
+        const modal = document.createElement('div'); modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width:500px;">
+                <h3 style="color:#ff7eb3;">🔍 Найти свободное окно</h3>
+                <label style="color:#ddd;">📅 С какой даты искать</label>
+                <input type="date" id="searchFrom">
+                <label style="color:#ddd;">📅 До какой даты (необязательно)</label>
+                <input type="date" id="searchTo">
+                <label style="color:#ddd;">⏰ Желаемое время (можно выбрать несколько)</label>
+                <div class="time-dropdown" id="timeDropdown" style="position:relative; margin-bottom:15px;">
+                    <button class="time-dropdown-btn" id="timeDropdownBtn" style="width:100%; padding:12px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,126,179,0.3); border-radius:15px; color:#ddd; text-align:left; cursor:pointer;">
+                        👆 Выберите время
+                    </button>
+                    <div class="time-dropdown-options" id="timeDropdownOptions" style="display:none; position:absolute; top:100%; left:0; right:0; background:rgba(25,25,45,0.95); backdrop-filter:blur(15px); border-radius:15px; margin-top:5px; padding:10px; z-index:10; border:1px solid rgba(255,126,179,0.4); max-height:200px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        ${allTimeSlots.map(t => `
+                            <label style="display:flex; align-items:center; padding:8px 12px; border-radius:10px; cursor:pointer; color:#ddd;"
+                                   onmouseover="this.style.background='rgba(255,126,179,0.2)'"
+                                   onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" value="${t}" style="margin-right:10px; accent-color:#ff7eb3;">
+                                <span>${t} – ${parseInt(t) + 2}:00</span>
+                            </label>
+                        `).join('')}
                     </div>
-                    <span style="color:#ff7eb3; font-size:1.2rem;">✓</span>
                 </div>
-            `;
-        }).join('');
+                <button class="modal-btn btn-primary" id="doSearch" style="width:100%;">Найти доступные окна</button>
+                <div id="searchResults" style="margin-top:20px; max-height:250px; overflow-y:auto;"></div>
+                <button class="modal-btn btn-secondary" id="closeSearch" style="width:100%; margin-top:10px;">Закрыть</button>
+            </div>`;
+        document.body.appendChild(modal);
+
+        const timeDropdownBtn = modal.querySelector('#timeDropdownBtn');
+        const timeDropdownOptions = modal.querySelector('#timeDropdownOptions');
+        timeDropdownBtn.addEventListener('click', (e) => { e.stopPropagation(); timeDropdownOptions.style.display = timeDropdownOptions.style.display === 'block' ? 'none' : 'block'; });
+        document.addEventListener('click', (e) => { if (!modal.querySelector('.time-dropdown').contains(e.target)) timeDropdownOptions.style.display = 'none'; });
+        timeDropdownOptions.addEventListener('change', () => {
+            const checked = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
+            timeDropdownBtn.innerHTML = checked.length ? `✅ Выбрано: ${checked.join(', ')}` : '👆 Выберите время';
+        });
+
+        modal.querySelector('#doSearch').addEventListener('click', () => {
+            const from = modal.querySelector('#searchFrom').valueAsDate || new Date();
+            const to = modal.querySelector('#searchTo').valueAsDate || new Date(from.getFullYear(), from.getMonth() + 2, 0);
+            const desiredTimes = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
+            const results = [];
+            let current = new Date(from);
+            while (current <= to) {
+                if (!isDateInPast(current)) {
+                    const dk = formatDateKey(current);
+                    if (!isDayOff(dk)) {
+                        const booked = getBookedSlotsForDate(current);
+                        allTimeSlots.forEach(time => {
+                            if (desiredTimes.length && !desiredTimes.includes(time)) return;
+                            if (!booked.includes(time) && !isPastSlot(current, time)) {
+                                results.push({ date: new Date(current), time });
+                            }
+                        });
+                    }
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            const container = modal.querySelector('#searchResults');
+            container.innerHTML = results.length ? results.map(r => {
+                const d = r.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
+                return `<div style="background:rgba(255,126,179,0.08); padding:12px 15px; border-radius:12px; margin-bottom:8px; border-left:3px solid #ff7eb3; color:#ddd; display:flex; justify-content:space-between; align-items:center;">
+                    <div><div style="color:#ff7eb3; font-weight:600;">${d}</div><div style="font-size:0.95rem; margin-top:3px;">${r.time} – ${parseInt(r.time) + 2}:00</div></div>
+                    <span style="color:#ff7eb3; font-size:1.2rem;">✓</span></div>`;
+            }).join('') : '<div style="color:#aaa; text-align:center; padding:20px;">😔 Свободных окон не найдено</div>';
+        });
+        modal.querySelector('#closeSearch').addEventListener('click', () => modal.remove());
     });
 
-    modal.querySelector('#closeSearch').addEventListener('click', () => modal.remove());
-});
-
-    // ===== ЧЁРНЫЙ СПИСОК =====
-    blacklistBtn.addEventListener('click', ()=>{ blacklistModal.classList.add('active'); renderBlacklist(); });
-    document.getElementById('addBlacklistBtn').addEventListener('click', ()=>{
+    // ========== ЧЁРНЫЙ СПИСОК ==========
+    blacklistBtn.addEventListener('click', () => { blacklistModal.classList.add('active'); renderBlacklist(); });
+    document.getElementById('addBlacklistBtn').addEventListener('click', () => {
         const phone = document.getElementById('newBlacklistPhone').value.trim();
-        if (phone && /^\d{11}$/.test(phone.replace(/\D/g,''))) { db.collection('blacklist').doc(phone.replace(/\D/g,'')).set({}); document.getElementById('newBlacklistPhone').value=''; }
-        else showMessage('Введите 11 цифр номера');
+        if (phone && /^\d{11}$/.test(phone.replace(/\D/g, ''))) {
+            db.collection('blacklist').doc(phone.replace(/\D/g, '')).set({});
+            document.getElementById('newBlacklistPhone').value = '';
+        } else showMessage('Введите 11 цифр номера');
     });
-    document.getElementById('closeBlacklistModal').addEventListener('click', ()=> blacklistModal.classList.remove('active'));
+    document.getElementById('closeBlacklistModal').addEventListener('click', () => blacklistModal.classList.remove('active'));
     function renderBlacklist() {
         const list = document.getElementById('blacklistList');
         if (!blacklist.length) { list.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;">Чёрный список пуст</div>'; return; }
-        list.innerHTML = blacklist.map(phone => `<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);padding:12px 15px;border-radius:12px;margin-bottom:8px;color:#ddd;"><span>${phone}</span><button data-phone="${phone}" style="background:none;border:none;color:#ff7eb3;cursor:pointer;font-size:1.2rem;">✕</button></div>`).join('');
-        list.querySelectorAll('button').forEach(btn => btn.addEventListener('click', ()=> db.collection('blacklist').doc(btn.dataset.phone).delete()));
+        list.innerHTML = blacklist.map(phone => `
+            <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);padding:12px 15px;border-radius:12px;margin-bottom:8px;color:#ddd;">
+                <span>${phone}</span>
+                <button data-phone="${phone}" style="background:none;border:none;color:#ff7eb3;cursor:pointer;font-size:1.2rem;">✕</button>
+            </div>`).join('');
+        list.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => db.collection('blacklist').doc(btn.dataset.phone).delete()));
     }
     db.collection('blacklist').onSnapshot(snap => { blacklist = snap.docs.map(d => d.id); if (blacklistModal.classList.contains('active')) renderBlacklist(); });
 
-    // ===== АДМИН-ПАНЕЛЬ =====
+    // ========== АДМИН-ПАНЕЛЬ ==========
     function renderAdminBookings() {
-        if (!isAdmin) { adminBookings.style.display='none'; return; }
-        adminBookings.style.display='block';
-        const now = new Date(); now.setHours(0,0,0,0);
+        if (!isAdmin) { adminBookings.style.display = 'none'; return; }
+        adminBookings.style.display = 'block';
+        const now = new Date(); now.setHours(0, 0, 0, 0);
         const allBookings = [];
         Object.keys(appointments).sort().forEach(dateKey => {
-            const [y,m,d] = dateKey.split('-').map(Number);
-            const date = new Date(y,m-1,d);
-            if (date >= now) appointments[dateKey].forEach(app => allBookings.push({...app, date, dateKey}));
+            const [y, m, d] = dateKey.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            if (date >= now) appointments[dateKey].forEach(app => allBookings.push({ ...app, date, dateKey }));
         });
         if (!allBookings.length) { bookingsContainer.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px;">Нет будущих записей</div>'; return; }
         let html = '';
-        allBookings.sort((a,b)=>a.date - b.date).forEach(app => {
-            const dateStr = app.date.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
+        allBookings.sort((a, b) => a.date - b.date).forEach(app => {
+            const dateStr = app.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
             html += `<div style="background:rgba(255,255,255,0.05);padding:15px;border-radius:15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid #ff7eb3;">
-                <div><div style="color:#ff7eb3;font-weight:600;">${dateStr}</div><div style="color:#ddd;"><span style="background:rgba(255,126,179,0.2);padding:2px 10px;border-radius:10px;">${app.time} – ${parseInt(app.time)+2}:00</span></div><div style="margin-top:8px;color:#eee;">👤 ${app.name} <span style="color:#aaa;margin-left:10px;">📱 ${app.phone}</span></div>${app.note ? `<div style="color:#aaa;margin-top:5px;font-style:italic;">📝 ${app.note}</div>` : ''}${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#ff7eb3;">📎 Дизайн</a>` : ''}</div>
+                <div><div style="color:#ff7eb3;font-weight:600;">${dateStr}</div><div style="color:#ddd;"><span style="background:rgba(255,126,179,0.2);padding:2px 10px;border-radius:10px;">${app.time} – ${parseInt(app.time) + 2}:00</span></div><div style="margin-top:8px;color:#eee;">👤 ${app.name} <span style="color:#aaa;margin-left:10px;">📱 ${app.phone}</span></div>${app.note ? `<div style="color:#aaa;margin-top:5px;font-style:italic;">📝 ${app.note}</div>` : ''}${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#ff7eb3;">📎 Дизайн</a>` : ''}</div>
                 <button class="delete-btn" data-docid="${app.docId}" style="background:#e74c3c;color:white;border:none;border-radius:50%;width:35px;height:35px;font-size:1.2rem;cursor:pointer;">✕</button>
             </div>`;
         });
         bookingsContainer.innerHTML = html;
         document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 const docId = this.dataset.docid;
                 const confirmModal = document.createElement('div'); confirmModal.className = 'modal active';
                 confirmModal.innerHTML = `<div class="modal-content" style="max-width:350px;"><h3 style="color:#ff7eb3;">Подтверждение</h3><p style="color:#ddd;margin:20px 0;">Удалить эту запись?</p><div style="display:flex;gap:10px;justify-content:flex-end;"><button class="modal-btn btn-secondary cancel-delete">Отмена</button><button class="modal-btn btn-primary confirm-delete">Удалить</button></div></div>`;
                 document.body.appendChild(confirmModal);
                 confirmModal.querySelector('.confirm-delete').addEventListener('click', async () => { await db.collection('appointments').doc(docId).delete(); confirmModal.remove(); });
-                confirmModal.querySelector('.cancel-delete').addEventListener('click', ()=> confirmModal.remove());
+                confirmModal.querySelector('.cancel-delete').addEventListener('click', () => confirmModal.remove());
             });
         });
     }
 
+    // ========== ПОДПИСКИ НА ОБНОВЛЕНИЯ ==========
     db.collection('daysOff').onSnapshot(snap => { daysOff = snap.docs.map(d => d.id); updateMasterPanelButtons(); });
     db.collection('appointments').onSnapshot(snap => {
         appointments = {};
-        snap.forEach(doc => { const data = doc.data(); const dateKey = doc.id.split('_')[0]; if (!appointments[dateKey]) appointments[dateKey] = []; appointments[dateKey].push({...data, docId: doc.id}); });
-        renderAll(); if (isAdmin) renderAdminBookings();
+        snap.forEach(doc => { const data = doc.data(); const dateKey = doc.id.split('_')[0]; if (!appointments[dateKey]) appointments[dateKey] = []; appointments[dateKey].push({ ...data, docId: doc.id }); });
+        renderAll();
+        if (isAdmin) renderAdminBookings();
     });
 
-    document.getElementById('prevMonth').addEventListener('click', ()=>{ currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} selectedDate=null; selectedTime=null; multiSelectMode=false; selectedDaysSet.clear(); renderAll(); });
-    document.getElementById('nextMonth').addEventListener('click', ()=>{ currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} selectedDate=null; selectedTime=null; multiSelectMode=false; selectedDaysSet.clear(); renderAll(); });
-
-    initializeAuth();
+    // ========== НАВИГАЦИЯ ПО МЕСЯЦАМ ==========
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
+        renderAll();
+    });
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
+        renderAll();
+    });
 </script>
 </body>
 </html>
