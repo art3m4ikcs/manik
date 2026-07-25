@@ -79,6 +79,17 @@
     <div class="loader-text">Manik загружается...</div>
 </div>
 
+<!-- Экран подтверждения email -->
+<div class="login-screen" id="verifyScreen" style="display:none;">
+    <div class="modal-content" style="max-width:400px;">
+        <h3 style="color:#b3436e;">📧 Подтверждение email</h3>
+        <p style="color:#4a2c3a; margin-bottom:15px;">На ваш email отправлено письмо. Подтвердите его, затем нажмите кнопку ниже.</p>
+        <button class="modal-btn btn-primary" id="checkVerifiedBtn" style="width:100%;">Я подтвердил(а) почту</button>
+        <p id="verifyStatusMsg" style="color:#b3436e; margin-top:10px;"></p>
+        <button class="modal-btn btn-secondary" id="backToLoginBtn" style="width:100%; margin-top:5px;">Назад ко входу</button>
+    </div>
+</div>
+
 <div class="login-screen" id="loginScreen">
     <div class="modal-content" style="max-width:400px;">
         <div class="tab-buttons">
@@ -128,16 +139,16 @@
 <div class="app-container" id="appContainer">
     <div class="calendar-wrapper" id="calendarWrapper">
         <div class="header">
-            <div class="logo">Manik</div>
+            <div class="logo">💅 Manik</div>
             <div class="dropdown">
                 <button class="menu-btn" id="menuBtn">☰ Меню</button>
                 <div class="dropdown-content" id="dropdownMenu">
-                    <button id="archiveBtn">Архив</button>
-                    <button id="myBookingsBtn">Мои записи</button>
-                    <button id="aiChatBtn"> ИИ консультант</button>
-                    <button id="searchWindowBtn"> Поиск окна</button>
-                    <button id="blacklistBtn" style="display:none;"> Чёрный список</button>
-                    <button id="logoutBtn"> Выйти</button>
+                    <button id="archiveBtn">📂 Архив</button>
+                    <button id="myBookingsBtn">📋 Мои записи</button>
+                    <button id="aiChatBtn">🤖 ИИ консультант</button>
+                    <button id="searchWindowBtn">🔍 Поиск окна</button>
+                    <button id="blacklistBtn" style="display:none;">🚫 Чёрный список</button>
+                    <button id="logoutBtn">🚪 Выйти</button>
                 </div>
             </div>
         </div>
@@ -149,7 +160,7 @@
             </div>
             <div class="weekdays"><span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span></div>
             <div class="days-grid" id="daysGrid"></div>
-            <div style="background:rgba(255,240,245,0.7);border-radius:20px;padding:15px;margin:15px 0;color:#b3436e;" id="selectedDateDisplay"> Дата не выбрана</div>
+            <div style="background:rgba(255,240,245,0.7);border-radius:20px;padding:15px;margin:15px 0;color:#b3436e;" id="selectedDateDisplay">📅 Дата не выбрана</div>
             <div id="timeSelectionArea" style="display:none;">
                 <div style="font-weight:600;color:#b3436e;margin-bottom:8px;">Доступное время (2 часа):</div>
                 <div class="time-slots" id="timeSlotsContainer"></div>
@@ -181,7 +192,7 @@
 </div>
 <div class="modal" id="aiChatModal">
     <div class="modal-content" style="max-width:500px;">
-        <h3 style="color:#b3436e;"> ИИ консультант по маникюру</h3>
+        <h3 style="color:#b3436e;">🤖 ИИ консультант по маникюру</h3>
         <div class="chat-container" id="chatContainer" style="height:300px; overflow-y:auto; margin:15px 0; padding:10px; background:rgba(255,240,245,0.5); border-radius:15px;"></div>
         <input type="text" id="chatInput" placeholder="Опишите, что хотите...">
         <button class="modal-btn btn-primary" id="sendChatBtn">Спросить</button>
@@ -217,7 +228,6 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    // URL вашего Cloudflare Worker для ИИ
     const AI_WORKER_URL = 'https://manik-ai.anime-tian-top.workers.dev';
 
     let masterKey = null;
@@ -235,7 +245,6 @@
     let firstLoadCompleted = false;
     let currentUser = null;
 
-    // ИИ-ограничения
     let dailyMessageCount = parseInt(localStorage.getItem('dailyMsgCount') || '0');
     let lastMsgDate = localStorage.getItem('lastMsgDate');
     const todayStr = new Date().toDateString();
@@ -246,10 +255,10 @@
     }
     let chatCooldown = false;
 
-    // DOM-элементы
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('appContainer');
     const loginScreen = document.getElementById('loginScreen');
+    const verifyScreen = document.getElementById('verifyScreen');
     const loginError = document.getElementById('loginError');
     const dropdownMenu = document.getElementById('dropdownMenu');
     const menuBtn = document.getElementById('menuBtn');
@@ -299,13 +308,12 @@
     }
     document.getElementById('closeMessageModal').addEventListener('click', () => messageModal.classList.remove('active'));
 
-    // ---------- ЗАБЫЛИ ПАРОЛЬ ----------
+    // Забыли пароль
     forgotPasswordLink.addEventListener('click', (e) => {
         e.preventDefault();
         forgotPasswordModal.classList.add('active');
     });
-    let resetAttempts = 0;
-    let lastResetTime = 0;
+    let resetAttempts = 0, lastResetTime = 0;
     document.getElementById('sendResetBtn').addEventListener('click', async () => {
         const email = document.getElementById('forgotEmail').value.trim();
         if (!email) { showMessage('Введите email'); return; }
@@ -316,15 +324,12 @@
             await auth.sendPasswordResetEmail(email);
             forgotPasswordModal.classList.remove('active');
             showMessage('Ссылка отправлена на ' + email);
-            lastResetTime = now;
-            resetAttempts++;
+            lastResetTime = now; resetAttempts++;
         } catch (err) { showMessage('Ошибка: ' + err.message); }
     });
     document.getElementById('closeForgotModal').addEventListener('click', () => forgotPasswordModal.classList.remove('active'));
 
-    // ---------- РЕГИСТРАЦИЯ (с верификацией и выходом) ----------
-    let verifyAttempts = 0;
-    let lastVerifyTime = 0;
+    // Регистрация – после создания НЕ выходим, а показываем verifyScreen
     document.getElementById('registerSubmitBtn').addEventListener('click', async () => {
         const email = document.getElementById('registerEmail').value.trim();
         const password = document.getElementById('registerPassword').value.trim();
@@ -332,32 +337,17 @@
         try {
             const cred = await auth.createUserWithEmailAndPassword(email, password);
             await cred.user.sendEmailVerification();
-            // Немедленно выходим
-            await auth.signOut();
-            verificationBlock.style.display = 'block';
-            document.getElementById('registerSubmitBtn').style.display = 'none';
-            loginError.style.display = 'none';
-            // Если введён правильный ключ мастера, создаём документ в коллекции masters
             const enteredKey = document.getElementById('registerMasterKey').value.trim();
             if (enteredKey === masterKey) {
                 await db.collection('masters').doc(cred.user.uid).set({ email: cred.user.email });
             }
+            // Показываем verifyScreen, скрываем логин
+            loginScreen.style.display = 'none';
+            verifyScreen.style.display = 'flex';
         } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
     });
 
-    resendVerifyBtn.addEventListener('click', async () => {
-        const now = Date.now();
-        if (now - lastVerifyTime < 45000) { verifyMsg.textContent = 'Подождите 45 секунд'; return; }
-        if (verifyAttempts >= 5) { verifyMsg.textContent = 'Превышено количество попыток'; return; }
-        try {
-            // Попытка повторно войти, чтобы получить доступ к user (но мы же вышли, поэтому user = null)
-            // Лучше запомнить email, но для простоты просим ввести заново (или можно сохранить email в переменную)
-            // Здесь оставим как есть, т.к. верификация уже отправлялась при регистрации
-            verifyMsg.textContent = 'Письмо уже было отправлено. Проверьте почту.';
-        } catch (err) { verifyMsg.textContent = 'Ошибка: ' + err.message; }
-    });
-
-    // ---------- ВХОД (с проверкой верификации) ----------
+    // Вход – если email не подтверждён, покажем verifyScreen
     document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
@@ -365,15 +355,36 @@
         try {
             const cred = await auth.signInWithEmailAndPassword(email, password);
             if (!cred.user.emailVerified) {
-                await auth.signOut();
-                showMessage('Ваш email не подтверждён. Проверьте почту и подтвердите, затем войдите.');
+                // показать verifyScreen
+                loginScreen.style.display = 'none';
+                verifyScreen.style.display = 'flex';
                 return;
             }
-            // Успешный вход – onAuthStateChanged сам подхватит
+            // onAuthStateChanged сам подхватит
         } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
     });
 
-    // ---------- МОИ ЗАПИСИ ----------
+    // Кнопка проверки подтверждения
+    document.getElementById('checkVerifiedBtn').addEventListener('click', async () => {
+        const user = auth.currentUser;
+        if (!user) return;
+        document.getElementById('verifyStatusMsg').textContent = 'Проверяем...';
+        await user.reload();
+        if (user.emailVerified) {
+            // Перезагрузим страницу, чтобы onAuthStateChanged увидел обновлённый статус
+            location.reload();
+        } else {
+            document.getElementById('verifyStatusMsg').textContent = 'Email ещё не подтверждён. Проверьте почту и нажмите кнопку ещё раз.';
+        }
+    });
+
+    document.getElementById('backToLoginBtn').addEventListener('click', () => {
+        auth.signOut();
+        verifyScreen.style.display = 'none';
+        loginScreen.style.display = 'flex';
+    });
+
+    // Мои записи
     myBookingsBtn.addEventListener('click', () => myBookingsModal.classList.add('active'));
     document.getElementById('findMyBookingsBtn').addEventListener('click', () => {
         const phone = document.getElementById('myBookingsPhone').value.trim();
@@ -396,13 +407,13 @@
             return `<div style="background:rgba(255,240,245,0.5); padding:10px; border-radius:12px; margin-bottom:6px; color:#4a2c3a;">
                 <div style="color:#e36b8c;">${dateStr}</div>
                 <div>${app.time} – ${parseInt(app.time)+2}:00</div>
-                ${app.note ? `<div style="color:#b3436e;"> ${app.note}</div>` : ''}
+                ${app.note ? `<div style="color:#b3436e;">📝 ${app.note}</div>` : ''}
             </div>`;
         }).join('');
     });
     document.getElementById('closeMyBookingsModal').addEventListener('click', () => myBookingsModal.classList.remove('active'));
 
-    // ---------- АВТОРИЗАЦИЯ (определение мастера) ----------
+    // Авторизация
     async function loadMasterKey() {
         try {
             const doc = await db.collection('settings').doc('masterKey').get();
@@ -425,13 +436,25 @@
     }
     function loadBlacklist() { return db.collection('blacklist').get().then(snap => { blacklist = snap.docs.map(d => d.id); }); }
 
-    function showLoginScreenFn() { loginScreen.style.display = 'flex'; appContainer.classList.remove('visible'); loader.classList.add('hidden'); }
-    function hideLoginScreenFn() { loginScreen.style.display = 'none'; }
+    function finishLoading() {
+        setTimeout(() => { loader.classList.add('hidden'); appContainer.classList.add('visible'); }, 500);
+    }
+    function updateUIForRole() {
+        blacklistBtn.style.display = isAdmin ? 'inline-block' : 'none';
+        if (isAdmin) {
+            masterPanel.classList.add('active');
+            document.getElementById('calendarWrapper').classList.add('shifted');
+        } else {
+            masterPanel.classList.remove('active');
+            document.getElementById('calendarWrapper').classList.remove('shifted');
+            multiSelectMode = false; selectedDaysSet.clear();
+        }
+        if (!isAdmin) adminBookings.style.display = 'none';
+        else renderAdminBookings();
+    }
     function logout() {
         auth.signOut();
         selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
-        hideLoginScreenFn();
-        showLoginScreenFn();
     }
 
     async function initializeAuth() {
@@ -439,14 +462,23 @@
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 currentUser = null; isAdmin = false;
-                showLoginScreenFn();
+                loginScreen.style.display = 'flex';
+                verifyScreen.style.display = 'none';
+                appContainer.classList.remove('visible');
+                loader.classList.add('hidden');
                 return;
             }
             currentUser = user;
-            // Проверяем, есть ли документ мастера
+            if (!user.emailVerified) {
+                loginScreen.style.display = 'none';
+                verifyScreen.style.display = 'flex';
+                appContainer.classList.remove('visible');
+                return;
+            }
+            verifyScreen.style.display = 'none';
+            loginScreen.style.display = 'none';
             const masterDoc = await db.collection('masters').doc(user.uid).get();
             isAdmin = masterDoc.exists;
-            hideLoginScreenFn();
             if (!firstLoadCompleted) {
                 await loadData();
                 await loadBlacklist();
@@ -471,24 +503,7 @@
         logoutBtn.addEventListener('click', logout);
     }
 
-    function finishLoading() {
-        setTimeout(() => { loader.classList.add('hidden'); appContainer.classList.add('visible'); }, 500);
-    }
-    function updateUIForRole() {
-        blacklistBtn.style.display = isAdmin ? 'inline-block' : 'none';
-        if (isAdmin) {
-            masterPanel.classList.add('active');
-            document.getElementById('calendarWrapper').classList.add('shifted');
-        } else {
-            masterPanel.classList.remove('active');
-            document.getElementById('calendarWrapper').classList.remove('shifted');
-            multiSelectMode = false; selectedDaysSet.clear();
-        }
-        if (!isAdmin) adminBookings.style.display = 'none';
-        else renderAdminBookings();
-    }
-
-    // ========== ИИ-ЧАТ (Cloudflare Worker) ==========
+    // ИИ-чат
     aiChatBtn.addEventListener('click', () => aiChatModal.classList.add('active'));
     document.getElementById('closeAiChatBtn').addEventListener('click', () => aiChatModal.classList.remove('active'));
     document.getElementById('sendChatBtn').addEventListener('click', sendChat);
@@ -497,21 +512,18 @@
     function sendChat() {
         const msg = chatInput.value.trim();
         if (!msg || chatCooldown) return;
-
         if (dailyMessageCount >= 10) {
-            addChatMessage('bot', ' Вы использовали лимит сообщений на сегодня (10). Возвращайтесь завтра!');
+            addChatMessage('bot', '🎀 Вы использовали лимит сообщений на сегодня (10). Возвращайтесь завтра!');
             return;
         }
-
         addChatMessage('user', msg);
         chatInput.value = '';
-
         chatCooldown = true;
         const sendBtn = document.getElementById('sendChatBtn');
         sendBtn.disabled = true;
         sendBtn.style.opacity = '0.5';
         let remaining = 10;
-        sendBtn.textContent = ` ${remaining}с`;
+        sendBtn.textContent = `⏳ ${remaining}с`;
         const interval = setInterval(() => {
             remaining--;
             if (remaining <= 0) {
@@ -521,7 +533,7 @@
                 sendBtn.textContent = 'Спросить';
                 chatCooldown = false;
             } else {
-                sendBtn.textContent = ` ${remaining}с`;
+                sendBtn.textContent = `⏳ ${remaining}с`;
             }
         }, 1000);
 
@@ -533,16 +545,14 @@
         .then(res => res.json())
         .then(data => {
             if (data.error) throw new Error(data.error);
-            addChatMessage('bot', data.reply);
+            let reply = data.reply;
+            if (reply.length > 300) reply = reply.substring(0, 300) + '...';
+            addChatMessage('bot', reply);
             dailyMessageCount++;
             localStorage.setItem('dailyMsgCount', dailyMessageCount.toString());
-            if (dailyMessageCount >= 10) {
-                addChatMessage('bot', 'Дневной лимит исчерпан. До завтра!');
-            }
+            if (dailyMessageCount >= 10) addChatMessage('bot', '🎀 Дневной лимит исчерпан. До завтра!');
         })
-        .catch(err => {
-            addChatMessage('bot', 'Ошибка: ' + err.message);
-        });
+        .catch(err => addChatMessage('bot', 'Ошибка: ' + err.message));
     }
 
     function addChatMessage(type, text) {
@@ -623,18 +633,18 @@
 
     function updateUIForSelectedDate() {
         if (!selectedDate || multiSelectMode) {
-            selectedDateDisplay.innerHTML = ' Дата не выбрана';
+            selectedDateDisplay.innerHTML = '📅 Дата не выбрана';
             timeSelectionArea.style.display = 'none';
             bookingFormArea.style.display = 'none';
             return;
         }
         const dk = formatDateKey(selectedDate);
-        selectedDateDisplay.innerHTML = ` ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}`;
+        selectedDateDisplay.innerHTML = `📅 ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}`;
         timeSelectionArea.innerHTML = '<div style="font-weight:600;color:#b3436e;margin-bottom:5px;">Доступное время (2 часа):</div><div class="time-slots" id="timeSlotsContainer"></div>';
         timeSlotsContainer = document.getElementById('timeSlotsContainer');
         timeSelectionArea.style.display = 'block';
         if (isDateInPast(selectedDate)) {
-            timeSelectionArea.innerHTML = '<div style="color:#b3436e;text-align:center;"> Запись только с завтрашнего дня</div>';
+            timeSelectionArea.innerHTML = '<div style="color:#b3436e;text-align:center;">⛔ Запись только с завтрашнего дня</div>';
             bookingFormArea.style.display = 'none';
             return;
         }
@@ -755,7 +765,7 @@
             clientNameInput.value=''; clientPhoneInput.value=''; clientNoteInput.value='';
             designFileInput.value=''; selectedTime=null;
             updateUIForSelectedDate();
-            showMessage(' Вы записаны!');
+            showMessage('✅ Вы записаны!');
         } catch(e) { showMessage('Ошибка: '+e.message); }
     });
 
@@ -776,7 +786,7 @@
     const archiveModal = document.createElement('div'); archiveModal.className = 'modal'; archiveModal.id = 'archiveModal';
     archiveModal.innerHTML = `
         <div class="modal-content" style="max-width:850px;">
-            <h3 style="color:#b3436e;"> Архив записей</h3>
+            <h3 style="color:#b3436e;">📂 Архив записей</h3>
             <div class="archive-container" style="display:flex; gap:20px; max-height:70vh;">
                 <div class="archive-years-panel" style="width:90px; background:rgba(255,240,245,0.5); border-radius:20px; padding:15px; overflow-y:auto; flex-shrink:0;" id="archiveYears"></div>
                 <div style="flex:1; overflow-y:auto;" id="archiveMain">
@@ -866,7 +876,7 @@
                 apps.forEach(app => {
                     list += `<div style="background:rgba(255,240,245,0.7); padding:10px; border-radius:12px; margin-bottom:6px; color:#4a2c3a;">
                         <div><strong>${app.time}-${parseInt(app.time)+2}:00</strong> — ${app.name} (${app.phone})</div>
-                        ${app.note ? `<div style="color:#b3436e;"> ${app.note}</div>` : ''}
+                        ${app.note ? `<div style="color:#b3436e;">📝 ${app.note}</div>` : ''}
                         ${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#e36b8c;">📎 Дизайн</a>` : ''}</div>`;
                 });
                 detailDiv.innerHTML = list;
@@ -891,12 +901,12 @@
         const modal = document.createElement('div'); modal.className = 'modal active';
         modal.innerHTML = `
             <div class="modal-content" style="max-width:500px;">
-                <h3 style="color:#b3436e;"> Найти свободное окно</h3>
-                <label style="color:#4a2c3a;"> С какой даты искать</label>
+                <h3 style="color:#b3436e;">🔍 Найти свободное окно</h3>
+                <label style="color:#4a2c3a;">📅 С какой даты искать</label>
                 <input type="date" id="searchFrom">
-                <label style="color:#4a2c3a;"> До какой даты (необязательно)</label>
+                <label style="color:#4a2c3a;">📅 До какой даты (необязательно)</label>
                 <input type="date" id="searchTo">
-                <label style="color:#4a2c3a;"> Желаемое время (можно выбрать несколько)</label>
+                <label style="color:#4a2c3a;">⏰ Желаемое время (можно выбрать несколько)</label>
                 <div class="time-dropdown" id="timeDropdown" style="position:relative; margin-bottom:15px;">
                     <button class="time-dropdown-btn" id="timeDropdownBtn" style="width:100%; padding:12px; background:rgba(255,240,245,0.5); border:1px solid #f0d3e0; border-radius:20px; color:#4a2c3a; text-align:left; cursor:pointer;">👆 Выберите время</button>
                     <div class="time-dropdown-options" id="timeDropdownOptions" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border-radius:15px; margin-top:5px; padding:10px; z-index:10; border:1px solid #f0d3e0; max-height:200px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
@@ -922,7 +932,7 @@
         document.addEventListener('click', (e) => { if (!modal.querySelector('.time-dropdown').contains(e.target)) timeDropdownOptions.style.display = 'none'; });
         timeDropdownOptions.addEventListener('change', () => {
             const checked = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
-            timeDropdownBtn.innerHTML = checked.length ? ` Выбрано: ${checked.join(', ')}` : ' Выберите время';
+            timeDropdownBtn.innerHTML = checked.length ? `✅ Выбрано: ${checked.join(', ')}` : '👆 Выберите время';
         });
 
         modal.querySelector('#doSearch').addEventListener('click', ()=>{
@@ -952,7 +962,7 @@
                 return `<div style="background:rgba(255,240,245,0.5); padding:12px 15px; border-radius:12px; margin-bottom:8px; border-left:3px solid #e36b8c; color:#4a2c3a; display:flex; justify-content:space-between; align-items:center;">
                     <div><div style="color:#e36b8c; font-weight:600;">${d}</div><div style="font-size:0.95rem; margin-top:3px;">${r.time} – ${parseInt(r.time)+2}:00</div></div>
                     <span style="color:#e36b8c; font-size:1.2rem;">✓</span></div>`;
-            }).join('') : '<div style="color:#b3436e; text-align:center; padding:20px;"> Свободных окон не найдено</div>';
+            }).join('') : '<div style="color:#b3436e; text-align:center; padding:20px;">😔 Свободных окон не найдено</div>';
         });
         modal.querySelector('#closeSearch').addEventListener('click', ()=> modal.remove());
     });
@@ -995,7 +1005,7 @@
         allBookings.sort((a,b)=>a.date - b.date).forEach(app => {
             const dateStr = app.date.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
             html += `<div style="background:rgba(255,240,245,0.5);padding:15px;border-radius:15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid #e36b8c;">
-                <div><div style="color:#e36b8c;font-weight:600;">${dateStr}</div><div style="color:#4a2c3a;"><span style="background:rgba(255,126,179,0.2);padding:2px 10px;border-radius:10px;">${app.time} – ${parseInt(app.time)+2}:00</span></div><div style="margin-top:8px;color:#4a2c3a;"> ${app.name} <span style="color:#b3436e;margin-left:10px;"> ${app.phone}</span></div>${app.note ? `<div style="color:#b3436e;margin-top:5px;font-style:italic;"> ${app.note}</div>` : ''}${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#e36b8c;">📎 Дизайн</a>` : ''}</div>
+                <div><div style="color:#e36b8c;font-weight:600;">${dateStr}</div><div style="color:#4a2c3a;"><span style="background:rgba(255,126,179,0.2);padding:2px 10px;border-radius:10px;">${app.time} – ${parseInt(app.time)+2}:00</span></div><div style="margin-top:8px;color:#4a2c3a;">👤 ${app.name} <span style="color:#b3436e;margin-left:10px;">📱 ${app.phone}</span></div>${app.note ? `<div style="color:#b3436e;margin-top:5px;font-style:italic;">📝 ${app.note}</div>` : ''}${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#e36b8c;">📎 Дизайн</a>` : ''}</div>
                 <button class="delete-btn" data-docid="${app.docId}" style="background:#e74c3c;color:white;border:none;border-radius:50%;width:35px;height:35px;font-size:1.2rem;cursor:pointer;">✕</button>
             </div>`;
         });
