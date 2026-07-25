@@ -72,6 +72,7 @@
         .tab-btn { flex:1; padding:10px; border-radius:20px; border:none; font-weight:600; cursor:pointer; transition:all 0.3s; }
         .tab-btn.active { background:linear-gradient(135deg, #ff7eb3, #ff758c); color:white; }
         .tab-btn:not(.active) { background:rgba(255,255,255,0.1); color:#ddd; }
+        /* Архив */
         .archive-container { display:flex; gap:20px; max-height:70vh; }
         .archive-years-panel { width:90px; background:rgba(255,255,255,0.03); border-radius:20px; padding:15px; overflow-y:auto; flex-shrink:0; }
         .archive-years-panel button { display:block; width:100%; background:transparent; border:none; color:#ccc; padding:10px; border-radius:12px; margin-bottom:6px; cursor:pointer; font-weight:500; transition:all 0.2s; }
@@ -86,6 +87,12 @@
         .archive-day-cell { aspect-ratio:1/1; background:rgba(255,255,255,0.05); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:500; color:#eee; font-size:0.9rem; cursor:pointer; transition:all 0.2s; border:1px solid transparent; position:relative; }
         .archive-day-cell.has-appointments { background:rgba(255,126,179,0.2); border-color:#ff7eb3; }
         .archive-day-cell:hover { background:rgba(255,126,179,0.3); }
+        /* Новый стиль выбора времени */
+        .time-dropdown-options label {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px; cursor: pointer; color: #ddd; transition: 0.2s;
+        }
+        .time-dropdown-options label:hover { background: rgba(255,126,179,0.15); }
     </style>
 </head>
 <body>
@@ -116,12 +123,24 @@
     </div>
 </div>
 
+<!-- Модальное окно восстановления пароля -->
 <div class="modal" id="forgotPasswordModal">
     <div class="modal-content">
         <h3 style="color:#ff7eb3;">Восстановление пароля</h3>
         <input type="email" id="forgotEmail" placeholder="Ваш email">
         <button class="modal-btn btn-primary" id="sendResetBtn">Отправить ссылку</button>
         <button class="modal-btn btn-secondary" id="closeForgotModal">Отмена</button>
+    </div>
+</div>
+
+<!-- Модальное окно "Мои записи" -->
+<div class="modal" id="myBookingsModal">
+    <div class="modal-content">
+        <h3 style="color:#ff7eb3;">📋 Мои записи</h3>
+        <input type="tel" id="myBookingsPhone" placeholder="Номер телефона">
+        <button class="modal-btn btn-primary" id="findMyBookingsBtn">Показать</button>
+        <div id="myBookingsResults" style="margin-top:15px; max-height:200px; overflow-y:auto;"></div>
+        <button class="modal-btn btn-secondary" id="closeMyBookingsModal">Закрыть</button>
     </div>
 </div>
 
@@ -176,6 +195,7 @@
     </div>
 </div>
 
+<!-- Дополнительные модальные окна -->
 <div class="modal" id="messageModal">
     <div class="modal-content"><p id="messageText" style="color:#ddd;"></p><button class="modal-btn btn-primary" id="closeMessageModal">OK</button></div>
 </div>
@@ -234,6 +254,7 @@
     let firstLoadCompleted = false;
     let currentUser = null;
 
+    // DOM-элементы
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('appContainer');
     const loginScreen = document.getElementById('loginScreen');
@@ -270,6 +291,7 @@
     const chatInput = document.getElementById('chatInput');
     const forgotPasswordModal = document.getElementById('forgotPasswordModal');
     const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const myBookingsModal = document.getElementById('myBookingsModal');
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
@@ -282,43 +304,52 @@
     }
     document.getElementById('closeMessageModal').addEventListener('click', () => messageModal.classList.remove('active'));
 
-    async function loadMasterKey() {
+    // ---------- ИСПРАВЛЕННАЯ КНОПКА "ЗАБЫЛИ ПАРОЛЬ?" ----------
+    forgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        forgotPasswordModal.classList.add('active');
+    });
+    document.getElementById('sendResetBtn').addEventListener('click', async () => {
+        const email = document.getElementById('forgotEmail').value.trim();
+        if (!email) { showMessage('Введите email'); return; }
         try {
-            const doc = await db.collection('settings').doc('masterKey').get();
-            masterKey = doc.exists ? doc.data().key : null;
-        } catch(e) { console.error(e); }
-    }
+            await auth.sendPasswordResetEmail(email);
+            forgotPasswordModal.classList.remove('active');
+            showMessage('Ссылка отправлена на ' + email);
+        } catch (err) { showMessage('Ошибка: ' + err.message); }
+    });
+    document.getElementById('closeForgotModal').addEventListener('click', () => forgotPasswordModal.classList.remove('active'));
 
-    async function loadData() {
-        const [daysSnap, apptSnap] = await Promise.all([
-            db.collection('daysOff').get(),
-            db.collection('appointments').get()
-        ]);
-        daysOff = daysSnap.docs.map(d => d.id);
-        appointments = {};
-        apptSnap.forEach(doc => {
-            const data = doc.data();
-            const dateKey = doc.id.split('_')[0];
-            if (!appointments[dateKey]) appointments[dateKey] = [];
-            appointments[dateKey].push({...data, docId: doc.id});
+    // ---------- "МОИ ЗАПИСИ" ----------
+    myBookingsBtn.addEventListener('click', () => myBookingsModal.classList.add('active'));
+    document.getElementById('findMyBookingsBtn').addEventListener('click', () => {
+        const phone = document.getElementById('myBookingsPhone').value.trim();
+        if (!phone) { showMessage('Введите номер телефона'); return; }
+        const now = new Date(); now.setHours(0,0,0,0);
+        const found = [];
+        Object.entries(appointments).forEach(([dateKey, apps]) => {
+            const [y,m,d] = dateKey.split('-').map(Number);
+            const date = new Date(y,m-1,d);
+            if (date < now) return;
+            apps.forEach(app => {
+                if (app.phone === phone.replace(/\D/g,'')) found.push({ ...app, dateKey });
+            });
         });
-    }
+        const container = document.getElementById('myBookingsResults');
+        if (!found.length) { container.innerHTML = '<p style="color:#ddd;">Нет будущих записей</p>'; return; }
+        container.innerHTML = found.map(app => {
+            const d = new Date(app.dateKey);
+            const dateStr = d.toLocaleDateString('ru-RU', { day:'numeric', month:'long', weekday:'short' });
+            return `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:6px; color:#ddd;">
+                <div style="color:#ff7eb3;">${dateStr}</div>
+                <div>${app.time} – ${parseInt(app.time)+2}:00</div>
+                ${app.note ? `<div style="color:#aaa;">📝 ${app.note}</div>` : ''}
+            </div>`;
+        }).join('');
+    });
+    document.getElementById('closeMyBookingsModal').addEventListener('click', () => myBookingsModal.classList.remove('active'));
 
-    function loadBlacklist() {
-        return db.collection('blacklist').get().then(snap => { blacklist = snap.docs.map(d => d.id); });
-    }
-
-    function showLoginScreenFn() { loginScreen.style.display = 'flex'; appContainer.classList.remove('visible'); loader.classList.add('hidden'); }
-    function hideLoginScreenFn() { loginScreen.style.display = 'none'; }
-
-    function logout() {
-        auth.signOut();
-        selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
-        hideLoginScreenFn();
-        showLoginScreenFn();
-    }
-
-    // ---------- АВТОРИЗАЦИЯ (с восстановлением пароля) ----------
+    // ---------- АВТОРИЗАЦИЯ ----------
     async function initializeAuth() {
         await loadMasterKey();
 
@@ -377,32 +408,42 @@
             } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
         });
 
-        // === ВОССТАНОВЛЕНИЕ ПАРОЛЯ (ИСПРАВЛЕНО) ===
-        if (forgotPasswordLink) {
-            forgotPasswordLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                forgotPasswordModal.classList.add('active');
-            });
-        }
-        document.getElementById('sendResetBtn').addEventListener('click', async () => {
-            const email = document.getElementById('forgotEmail').value.trim();
-            if (!email) { showMessage('Введите email'); return; }
-            try {
-                await auth.sendPasswordResetEmail(email);
-                forgotPasswordModal.classList.remove('active');
-                showMessage('Ссылка отправлена на ' + email);
-            } catch (err) { showMessage('Ошибка: ' + err.message); }
-        });
-        document.getElementById('closeForgotModal').addEventListener('click', () => forgotPasswordModal.classList.remove('active'));
-
         logoutBtn.addEventListener('click', logout);
     }
 
+    // Вспомогательные функции (loadMasterKey, loadData, loadBlacklist, showLoginScreenFn и т.д.)
+    async function loadMasterKey() {
+        try {
+            const doc = await db.collection('settings').doc('masterKey').get();
+            masterKey = doc.exists ? doc.data().key : null;
+        } catch(e) { console.error(e); }
+    }
+    async function loadData() {
+        const [daysSnap, apptSnap] = await Promise.all([
+            db.collection('daysOff').get(),
+            db.collection('appointments').get()
+        ]);
+        daysOff = daysSnap.docs.map(d => d.id);
+        appointments = {};
+        apptSnap.forEach(doc => {
+            const data = doc.data();
+            const dateKey = doc.id.split('_')[0];
+            if (!appointments[dateKey]) appointments[dateKey] = [];
+            appointments[dateKey].push({...data, docId: doc.id});
+        });
+    }
+    function loadBlacklist() { return db.collection('blacklist').get().then(snap => { blacklist = snap.docs.map(d => d.id); }); }
+    function showLoginScreenFn() { loginScreen.style.display = 'flex'; appContainer.classList.remove('visible'); loader.classList.add('hidden'); }
+    function hideLoginScreenFn() { loginScreen.style.display = 'none'; }
+    function logout() {
+        auth.signOut();
+        selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
+        hideLoginScreenFn();
+        showLoginScreenFn();
+    }
+
     function finishLoading() {
-        setTimeout(() => {
-            loader.classList.add('hidden');
-            appContainer.classList.add('visible');
-        }, 500);
+        setTimeout(() => { loader.classList.add('hidden'); appContainer.classList.add('visible'); }, 500);
     }
 
     function updateUIForRole() {
@@ -421,6 +462,9 @@
         else renderAdminBookings();
     }
 
+    // Календарь и остальной функционал остаётся без изменений (см. предыдущую часть 2)
+    // ... (весь код календаря, записи, панели мастера, архива, поиска окон, чёрного списка, админ-панели)
+        // ========== КАЛЕНДАРЬ ==========
     function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
     function isToday(d) { const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
     function isDayOff(dk) { return daysOff.includes(dk); }
@@ -428,10 +472,12 @@
     function isPastSlot(d,time) { if(!isToday(d)) return false; const [h,m]=time.split(':').map(Number); const end=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h+2,m); return end <= new Date(); }
     function isDateInPast(d) { const tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1); tomorrow.setHours(0,0,0,0); return new Date(d.getFullYear(),d.getMonth(),d.getDate()) < tomorrow; }
 
-    function renderAll() { renderCalendar(); if (selectedDate) updateUIForSelectedDate(); updateMasterPanelButtons(); }
+    function renderAll() {
+        renderCalendar();
+        if (selectedDate) updateUIForSelectedDate();
+        updateMasterPanelButtons();
+    }
 
-    initializeAuth();
-    // ========== КАЛЕНДАРЬ ==========
     function renderCalendar() {
         monthYearEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -653,45 +699,6 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ========== МОИ ЗАПИСИ (кнопка) ==========
-    myBookingsBtn.addEventListener('click', () => {
-        const modal = document.createElement('div');
-        modal.className = 'modal active';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3 style="color:#ff7eb3;">📋 Мои записи</h3>
-                <input type="tel" id="myBookingsPhone" placeholder="Номер телефона">
-                <button class="modal-btn btn-primary" id="findMyBookingsBtn">Показать</button>
-                <div id="myBookingsResults" style="margin-top:15px; max-height:250px; overflow-y:auto;"></div>
-                <button class="modal-btn btn-secondary" id="closeMyBookingsModal" style="margin-top:10px;">Закрыть</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        modal.querySelector('#findMyBookingsBtn').addEventListener('click', () => {
-            const phone = modal.querySelector('#myBookingsPhone').value.trim().replace(/\D/g, '');
-            if (!phone || !/^\d{11}$/.test(phone)) { showMessage('Введите корректный номер (11 цифр)'); return; }
-            const now = new Date(); now.setHours(0,0,0,0);
-            const found = [];
-            Object.entries(appointments).forEach(([dateKey, apps]) => {
-                const [y,m,d] = dateKey.split('-').map(Number);
-                const date = new Date(y, m-1, d);
-                if (date >= now) apps.filter(a => a.phone === phone).forEach(a => found.push({...a, dateKey}));
-            });
-            const container = modal.querySelector('#myBookingsResults');
-            if (!found.length) { container.innerHTML = '<p style="color:#aaa;">Записей не найдено</p>'; return; }
-            container.innerHTML = found.sort((a,b) => new Date(a.dateKey) - new Date(b.dateKey)).map(app => {
-                const d = new Date(app.dateKey);
-                const dateStr = d.toLocaleDateString('ru-RU', { day:'numeric', month:'long', weekday:'short' });
-                return `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:6px; color:#ddd;">
-                    <div style="color:#ff7eb3;">${dateStr}</div>
-                    <div>${app.time}-${parseInt(app.time)+2}:00 | ${app.name}</div>
-                    ${app.note ? `<div style="color:#aaa;">📝 ${app.note}</div>` : ''}
-                </div>`;
-            }).join('');
-        });
-        modal.querySelector('#closeMyBookingsModal').addEventListener('click', () => modal.remove());
-    });
-
     // ========== АРХИВ ==========
     const archiveModal = document.createElement('div'); archiveModal.className = 'modal'; archiveModal.id = 'archiveModal';
     archiveModal.innerHTML = `
@@ -805,11 +812,11 @@
                     </button>
                     <div class="time-dropdown-options" id="timeDropdownOptions" style="display:none; position:absolute; top:100%; left:0; right:0; background:rgba(25,25,45,0.95); backdrop-filter:blur(15px); border-radius:15px; margin-top:5px; padding:10px; z-index:10; border:1px solid rgba(255,126,179,0.4); max-height:200px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
                         ${allTimeSlots.map(t => `
-                            <label style="display:flex; align-items:center; padding:8px 12px; border-radius:10px; cursor:pointer; color:#ddd;"
-                                   onmouseover="this.style.background='rgba(255,126,179,0.2)'"
+                            <label style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; cursor:pointer; color:#ddd; transition:0.2s;"
+                                   onmouseover="this.style.background='rgba(255,126,179,0.15)'"
                                    onmouseout="this.style.background='transparent'">
-                                <input type="checkbox" value="${t}" style="margin-right:10px; accent-color:#ff7eb3;">
                                 <span>${t} – ${parseInt(t) + 2}:00</span>
+                                <input type="checkbox" value="${t}" style="accent-color:#ff7eb3;">
                             </label>
                         `).join('')}
                     </div>
@@ -938,6 +945,9 @@
         selectedDate = null; selectedTime = null; multiSelectMode = false; selectedDaysSet.clear();
         renderAll();
     });
+
+    initializeAuth();
+    // Вставьте его сюда
 </script>
 </body>
 </html>
