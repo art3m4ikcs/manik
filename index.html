@@ -136,7 +136,7 @@
 <!-- Модальное окно "Мои записи" -->
 <div class="modal" id="myBookingsModal">
     <div class="modal-content">
-        <h3 style="color:#ff7eb3;">📋 Мои записи</h3>
+        <h3 style="color:#ff7eb3;"> Мои записи</h3>
         <input type="tel" id="myBookingsPhone" placeholder="Номер телефона">
         <button class="modal-btn btn-primary" id="findMyBookingsBtn">Показать</button>
         <div id="myBookingsResults" style="margin-top:15px; max-height:200px; overflow-y:auto;"></div>
@@ -147,16 +147,16 @@
 <div class="app-container" id="appContainer">
     <div class="calendar-wrapper" id="calendarWrapper">
         <div class="header">
-            <div class="logo">💅 Manik</div>
+            <div class="logo">Manik</div>
             <div class="dropdown">
                 <button class="menu-btn" id="menuBtn">☰ Меню</button>
                 <div class="dropdown-content" id="dropdownMenu">
-                    <button id="archiveBtn">📂 Архив</button>
-                    <button id="myBookingsBtn">📋 Мои записи</button>
-                    <button id="aiChatBtn">🤖 ИИ консультант</button>
-                    <button id="searchWindowBtn">🔍 Поиск окна</button>
-                    <button id="blacklistBtn" style="display:none;">🚫 Чёрный список</button>
-                    <button id="logoutBtn">🚪 Выйти</button>
+                    <button id="archiveBtn"> Архив</button>
+                    <button id="myBookingsBtn"> Мои записи</button>
+                    <button id="aiChatBtn"> ИИ консультант</button>
+                    <button id="searchWindowBtn"> Поиск окна</button>
+                    <button id="blacklistBtn" style="display:none;"> Чёрный список</button>
+                    <button id="logoutBtn"> Выйти</button>
                 </div>
             </div>
         </div>
@@ -168,7 +168,7 @@
             </div>
             <div class="weekdays"><span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span></div>
             <div class="days-grid" id="daysGrid"></div>
-            <div style="background:rgba(255,126,179,0.1);border-radius:20px;padding:15px;margin:15px 0;color:#ff7eb3;" id="selectedDateDisplay">📅 Дата не выбрана</div>
+            <div style="background:rgba(255,126,179,0.1);border-radius:20px;padding:15px;margin:15px 0;color:#ff7eb3;" id="selectedDateDisplay"> Дата не выбрана</div>
             <div id="timeSelectionArea" style="display:none;">
                 <div style="font-weight:600;color:#ff7eb3;margin-bottom:8px;">Доступное время (2 часа):</div>
                 <div class="time-slots" id="timeSlotsContainer"></div>
@@ -201,7 +201,7 @@
 </div>
 <div class="modal" id="aiChatModal">
     <div class="modal-content" style="max-width:500px;">
-        <h3 style="color:#ff7eb3;">🤖 ИИ консультант по маникюру</h3>
+        <h3 style="color:#ff7eb3;"> ИИ консультант по маникюру</h3>
         <div class="chat-container" id="chatContainer" style="height:300px; overflow-y:auto; margin:15px 0; padding:10px; background:rgba(0,0,0,0.2); border-radius:15px;"></div>
         <input type="text" id="chatInput" placeholder="Опишите, что хотите...">
         <button class="modal-btn btn-primary" id="sendChatBtn">Спросить</button>
@@ -291,6 +291,15 @@
     const chatInput = document.getElementById('chatInput');
     const forgotPasswordModal = document.getElementById('forgotPasswordModal');
     const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const modal = document.getElementById('forgotPasswordModal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    });
+}
     const myBookingsModal = document.getElementById('myBookingsModal');
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -343,7 +352,7 @@
             return `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:6px; color:#ddd;">
                 <div style="color:#ff7eb3;">${dateStr}</div>
                 <div>${app.time} – ${parseInt(app.time)+2}:00</div>
-                ${app.note ? `<div style="color:#aaa;">📝 ${app.note}</div>` : ''}
+                ${app.note ? `<div style="color:#aaa;"> ${app.note}</div>` : ''}
             </div>`;
         }).join('');
     });
@@ -522,18 +531,18 @@
 
     function updateUIForSelectedDate() {
         if (!selectedDate || multiSelectMode) {
-            selectedDateDisplay.innerHTML = '📅 Дата не выбрана';
+            selectedDateDisplay.innerHTML = ' Дата не выбрана';
             timeSelectionArea.style.display = 'none';
             bookingFormArea.style.display = 'none';
             return;
         }
         const dk = formatDateKey(selectedDate);
-        selectedDateDisplay.innerHTML = `📅 ${selectedDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}`;
+        selectedDateDisplay.innerHTML = ` ${selectedDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}`;
         timeSelectionArea.innerHTML = '<div style="font-weight:600;color:#ff7eb3;margin-bottom:5px;">Доступное время (2 часа):</div><div class="time-slots" id="timeSlotsContainer"></div>';
         timeSlotsContainer = document.getElementById('timeSlotsContainer');
         timeSelectionArea.style.display = 'block';
         if (isDateInPast(selectedDate)) {
-            timeSelectionArea.innerHTML = '<div style="color:#ff7eb3;text-align:center;">⛔ Запись только с завтрашнего дня</div>';
+            timeSelectionArea.innerHTML = '<div style="color:#ff7eb3;text-align:center;"> Запись только с завтрашнего дня</div>';
             bookingFormArea.style.display = 'none';
             return;
         }
@@ -659,7 +668,7 @@
             clientNameInput.value = ''; clientPhoneInput.value = ''; clientNoteInput.value = '';
             designFileInput.value = ''; selectedTime = null;
             updateUIForSelectedDate();
-            showMessage('✅ Вы записаны!');
+            showMessage(' Вы записаны!');
         } catch (e) { showMessage('Ошибка: ' + e.message); }
     });
 
@@ -703,7 +712,7 @@
     const archiveModal = document.createElement('div'); archiveModal.className = 'modal'; archiveModal.id = 'archiveModal';
     archiveModal.innerHTML = `
         <div class="modal-content" style="max-width:850px;">
-            <h3 style="color:#ff7eb3;">📂 Архив записей</h3>
+            <h3 style="color:#ff7eb3;"> Архив записей</h3>
             <div class="archive-container">
                 <div class="archive-years-panel" id="archiveYears"></div>
                 <div class="archive-main">
@@ -776,7 +785,7 @@
                 apps.forEach(app => {
                     list += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:6px; color:#ddd;">
                         <div><strong>${app.time}-${parseInt(app.time) + 2}:00</strong> — ${app.name} (${app.phone})</div>
-                        ${app.note ? `<div style="color:#aaa;">📝 ${app.note}</div>` : ''}
+                        ${app.note ? `<div style="color:#aaa;"> ${app.note}</div>` : ''}
                         ${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#ff7eb3;">📎 Дизайн</a>` : ''}</div>`;
                 });
                 detailDiv.innerHTML = list;
@@ -800,15 +809,15 @@
         const modal = document.createElement('div'); modal.className = 'modal active';
         modal.innerHTML = `
             <div class="modal-content" style="max-width:500px;">
-                <h3 style="color:#ff7eb3;">🔍 Найти свободное окно</h3>
-                <label style="color:#ddd;">📅 С какой даты искать</label>
+                <h3 style="color:#ff7eb3;"> Найти свободное окно</h3>
+                <label style="color:#ddd;"> С какой даты искать</label>
                 <input type="date" id="searchFrom">
-                <label style="color:#ddd;">📅 До какой даты (необязательно)</label>
+                <label style="color:#ddd;"> До какой даты (необязательно)</label>
                 <input type="date" id="searchTo">
-                <label style="color:#ddd;">⏰ Желаемое время (можно выбрать несколько)</label>
+                <label style="color:#ddd;"> Желаемое время (можно выбрать несколько)</label>
                 <div class="time-dropdown" id="timeDropdown" style="position:relative; margin-bottom:15px;">
                     <button class="time-dropdown-btn" id="timeDropdownBtn" style="width:100%; padding:12px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,126,179,0.3); border-radius:15px; color:#ddd; text-align:left; cursor:pointer;">
-                        👆 Выберите время
+                         Выберите время
                     </button>
                     <div class="time-dropdown-options" id="timeDropdownOptions" style="display:none; position:absolute; top:100%; left:0; right:0; background:rgba(25,25,45,0.95); backdrop-filter:blur(15px); border-radius:15px; margin-top:5px; padding:10px; z-index:10; border:1px solid rgba(255,126,179,0.4); max-height:200px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
                         ${allTimeSlots.map(t => `
@@ -833,7 +842,7 @@
         document.addEventListener('click', (e) => { if (!modal.querySelector('.time-dropdown').contains(e.target)) timeDropdownOptions.style.display = 'none'; });
         timeDropdownOptions.addEventListener('change', () => {
             const checked = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
-            timeDropdownBtn.innerHTML = checked.length ? `✅ Выбрано: ${checked.join(', ')}` : '👆 Выберите время';
+            timeDropdownBtn.innerHTML = checked.length ? ` Выбрано: ${checked.join(', ')}` : ' Выберите время';
         });
 
         modal.querySelector('#doSearch').addEventListener('click', () => {
@@ -863,7 +872,7 @@
                 return `<div style="background:rgba(255,126,179,0.08); padding:12px 15px; border-radius:12px; margin-bottom:8px; border-left:3px solid #ff7eb3; color:#ddd; display:flex; justify-content:space-between; align-items:center;">
                     <div><div style="color:#ff7eb3; font-weight:600;">${d}</div><div style="font-size:0.95rem; margin-top:3px;">${r.time} – ${parseInt(r.time) + 2}:00</div></div>
                     <span style="color:#ff7eb3; font-size:1.2rem;">✓</span></div>`;
-            }).join('') : '<div style="color:#aaa; text-align:center; padding:20px;">😔 Свободных окон не найдено</div>';
+            }).join('') : '<div style="color:#aaa; text-align:center; padding:20px;"> Свободных окон не найдено</div>';
         });
         modal.querySelector('#closeSearch').addEventListener('click', () => modal.remove());
     });
@@ -947,7 +956,6 @@
     });
 
     initializeAuth();
-    // Вставьте его сюда
 </script>
 </body>
 </html>
