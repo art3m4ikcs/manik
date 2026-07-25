@@ -72,7 +72,6 @@
         .tab-btn { flex:1; padding:10px; border-radius:20px; border:none; font-weight:600; cursor:pointer; transition:all 0.3s; }
         .tab-btn.active { background:linear-gradient(135deg, #ff7eb3, #ff758c); color:white; }
         .tab-btn:not(.active) { background:rgba(255,255,255,0.1); color:#ddd; }
-        /* Архив */
         .archive-container { display:flex; gap:20px; max-height:70vh; }
         .archive-years-panel { width:90px; background:rgba(255,255,255,0.03); border-radius:20px; padding:15px; overflow-y:auto; flex-shrink:0; }
         .archive-years-panel button { display:block; width:100%; background:transparent; border:none; color:#ccc; padding:10px; border-radius:12px; margin-bottom:6px; cursor:pointer; font-weight:500; transition:all 0.2s; }
@@ -117,7 +116,6 @@
     </div>
 </div>
 
-<!-- Модальное окно восстановления пароля -->
 <div class="modal" id="forgotPasswordModal">
     <div class="modal-content">
         <h3 style="color:#ff7eb3;">Восстановление пароля</h3>
@@ -178,7 +176,6 @@
     </div>
 </div>
 
-<!-- Дополнительные модальные окна -->
 <div class="modal" id="messageModal">
     <div class="modal-content"><p id="messageText" style="color:#ddd;"></p><button class="modal-btn btn-primary" id="closeMessageModal">OK</button></div>
 </div>
@@ -237,7 +234,6 @@
     let firstLoadCompleted = false;
     let currentUser = null;
 
-    // DOM-элементы
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('appContainer');
     const loginScreen = document.getElementById('loginScreen');
@@ -382,10 +378,12 @@
         });
 
         // === ВОССТАНОВЛЕНИЕ ПАРОЛЯ (ИСПРАВЛЕНО) ===
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            forgotPasswordModal.classList.add('active');
-        });
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                forgotPasswordModal.classList.add('active');
+            });
+        }
         document.getElementById('sendResetBtn').addEventListener('click', async () => {
             const email = document.getElementById('forgotEmail').value.trim();
             if (!email) { showMessage('Введите email'); return; }
@@ -423,7 +421,6 @@
         else renderAdminBookings();
     }
 
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
     function isToday(d) { const t=new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
     function isDayOff(dk) { return daysOff.includes(dk); }
@@ -434,7 +431,7 @@
     function renderAll() { renderCalendar(); if (selectedDate) updateUIForSelectedDate(); updateMasterPanelButtons(); }
 
     initializeAuth();
-        // ========== КАЛЕНДАРЬ ==========
+    // ========== КАЛЕНДАРЬ ==========
     function renderCalendar() {
         monthYearEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -655,6 +652,45 @@
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+
+    // ========== МОИ ЗАПИСИ (кнопка) ==========
+    myBookingsBtn.addEventListener('click', () => {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3 style="color:#ff7eb3;">📋 Мои записи</h3>
+                <input type="tel" id="myBookingsPhone" placeholder="Номер телефона">
+                <button class="modal-btn btn-primary" id="findMyBookingsBtn">Показать</button>
+                <div id="myBookingsResults" style="margin-top:15px; max-height:250px; overflow-y:auto;"></div>
+                <button class="modal-btn btn-secondary" id="closeMyBookingsModal" style="margin-top:10px;">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#findMyBookingsBtn').addEventListener('click', () => {
+            const phone = modal.querySelector('#myBookingsPhone').value.trim().replace(/\D/g, '');
+            if (!phone || !/^\d{11}$/.test(phone)) { showMessage('Введите корректный номер (11 цифр)'); return; }
+            const now = new Date(); now.setHours(0,0,0,0);
+            const found = [];
+            Object.entries(appointments).forEach(([dateKey, apps]) => {
+                const [y,m,d] = dateKey.split('-').map(Number);
+                const date = new Date(y, m-1, d);
+                if (date >= now) apps.filter(a => a.phone === phone).forEach(a => found.push({...a, dateKey}));
+            });
+            const container = modal.querySelector('#myBookingsResults');
+            if (!found.length) { container.innerHTML = '<p style="color:#aaa;">Записей не найдено</p>'; return; }
+            container.innerHTML = found.sort((a,b) => new Date(a.dateKey) - new Date(b.dateKey)).map(app => {
+                const d = new Date(app.dateKey);
+                const dateStr = d.toLocaleDateString('ru-RU', { day:'numeric', month:'long', weekday:'short' });
+                return `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:6px; color:#ddd;">
+                    <div style="color:#ff7eb3;">${dateStr}</div>
+                    <div>${app.time}-${parseInt(app.time)+2}:00 | ${app.name}</div>
+                    ${app.note ? `<div style="color:#aaa;">📝 ${app.note}</div>` : ''}
+                </div>`;
+            }).join('');
+        });
+        modal.querySelector('#closeMyBookingsModal').addEventListener('click', () => modal.remove());
+    });
 
     // ========== АРХИВ ==========
     const archiveModal = document.createElement('div'); archiveModal.className = 'modal'; archiveModal.id = 'archiveModal';
