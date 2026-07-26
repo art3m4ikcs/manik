@@ -90,6 +90,7 @@
     </div>
 </div>
 
+<!-- Экран входа / регистрации -->
 <div class="login-screen" id="loginScreen">
     <div class="modal-content" style="max-width:400px;">
         <div class="tab-buttons">
@@ -98,13 +99,19 @@
         </div>
         <div id="loginForm">
             <input type="email" id="loginEmail" placeholder="Email">
-            <input type="password" id="loginPassword" placeholder="Пароль">
+            <div style="position:relative; margin:10px 0;">
+                <input type="password" id="loginPassword" placeholder="Пароль" style="padding-right:45px;">
+                <button type="button" id="toggleLoginPassword" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#b3436e; cursor:pointer; font-size:1.2rem;">👁️</button>
+            </div>
             <button class="modal-btn btn-primary" id="loginSubmitBtn" style="width:100%;">Войти</button>
             <a href="#" id="forgotPasswordLink" style="color:#b3436e; display:block; text-align:center; margin-top:10px; font-size:0.9rem;">Забыли пароль?</a>
         </div>
         <div id="registerForm" style="display:none;">
             <input type="email" id="registerEmail" placeholder="Email">
-            <input type="password" id="registerPassword" placeholder="Пароль">
+            <div style="position:relative; margin:10px 0;">
+                <input type="password" id="registerPassword" placeholder="Пароль" style="padding-right:45px;">
+                <button type="button" id="toggleRegisterPassword" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#b3436e; cursor:pointer; font-size:1.2rem;">👁️</button>
+            </div>
             <input type="text" id="registerMasterKey" placeholder="Ключ мастера (если есть)">
             <button class="modal-btn btn-primary" id="registerSubmitBtn" style="width:100%;">Зарегистрироваться</button>
             <div id="verificationBlock" style="display:none; margin-top:15px;">
@@ -117,15 +124,18 @@
     </div>
 </div>
 
+<!-- Модальное окно восстановления пароля -->
 <div class="modal" id="forgotPasswordModal">
     <div class="modal-content">
         <h3 style="color:#b3436e;">Восстановление пароля</h3>
         <input type="email" id="forgotEmail" placeholder="Ваш email">
         <button class="modal-btn btn-primary" id="sendResetBtn">Отправить ссылку</button>
         <button class="modal-btn btn-secondary" id="closeForgotModal">Отмена</button>
+        <button class="modal-btn btn-secondary" id="backToLoginFromForgot" style="display:none;">← Назад ко входу</button>
     </div>
 </div>
 
+<!-- Модальное окно "Мои записи" -->
 <div class="modal" id="myBookingsModal">
     <div class="modal-content">
         <h3 style="color:#b3436e;">📋 Мои записи</h3>
@@ -136,6 +146,7 @@
     </div>
 </div>
 
+<!-- Основной контейнер приложения -->
 <div class="app-container" id="appContainer">
     <div class="calendar-wrapper" id="calendarWrapper">
         <div class="header">
@@ -187,6 +198,7 @@
     </div>
 </div>
 
+<!-- Дополнительные модальные окна -->
 <div class="modal" id="messageModal">
     <div class="modal-content"><p id="messageText" style="color:#4a2c3a;"></p><button class="modal-btn btn-primary" id="closeMessageModal">OK</button></div>
 </div>
@@ -308,11 +320,126 @@
     }
     document.getElementById('closeMessageModal').addEventListener('click', () => messageModal.classList.remove('active'));
 
-    // Забыли пароль
+    // ====== ПОКАЗ/СКРЫТИЕ ПАРОЛЯ ======
+    function setupPasswordToggle(toggleBtnId, passwordInputId) {
+        const toggleBtn = document.getElementById(toggleBtnId);
+        const passwordInput = document.getElementById(passwordInputId);
+        toggleBtn.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            toggleBtn.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+    }
+    setupPasswordToggle('toggleLoginPassword', 'loginPassword');
+    setupPasswordToggle('toggleRegisterPassword', 'registerPassword');
+
+    // ====== ЗАБЫЛИ ПАРОЛЬ (ссылка) ======
     forgotPasswordLink.addEventListener('click', (e) => {
         e.preventDefault();
         forgotPasswordModal.classList.add('active');
+        document.getElementById('backToLoginFromForgot').style.display = 'none';
+        failedLoginAttempts = 0;
+        document.getElementById('loginError').style.display = 'none';
     });
+
+    let failedLoginAttempts = 0;
+
+    document.getElementById('backToLoginFromForgot').addEventListener('click', () => {
+        forgotPasswordModal.classList.remove('active');
+        loginScreen.style.display = 'flex';
+        failedLoginAttempts = 0;
+        document.getElementById('loginError').style.display = 'none';
+    });
+
+    // ====== ВХОД (с ограничением попыток) ======
+    document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        if (!email || !password) {
+            loginError.textContent = 'Введите email и пароль';
+            loginError.style.display = 'block';
+            return;
+        }
+        try {
+            const cred = await auth.signInWithEmailAndPassword(email, password);
+            failedLoginAttempts = 0;
+            if (!cred.user.emailVerified) {
+                loginScreen.style.display = 'none';
+                verifyScreen.style.display = 'flex';
+                return;
+            }
+        } catch (err) {
+            failedLoginAttempts++;
+            loginError.textContent = `Ошибка: ${err.message}. Осталось попыток: ${5 - failedLoginAttempts}`;
+            loginError.style.display = 'block';
+            if (failedLoginAttempts >= 5) {
+                loginScreen.style.display = 'none';
+                forgotPasswordModal.classList.add('active');
+                document.getElementById('backToLoginFromForgot').style.display = 'inline-block';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginError').style.display = 'none';
+            }
+        }
+    });
+
+    document.getElementById('showRegisterTab').addEventListener('click', () => {
+        failedLoginAttempts = 0;
+        document.getElementById('loginError').style.display = 'none';
+    });
+
+    // ====== РЕГИСТРАЦИЯ ======
+    document.getElementById('registerSubmitBtn').addEventListener('click', async () => {
+        const email = document.getElementById('registerEmail').value.trim();
+        const password = document.getElementById('registerPassword').value.trim();
+        if (!email || !password) { loginError.textContent = 'Введите email и пароль'; loginError.style.display = 'block'; return; }
+        try {
+            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            await cred.user.sendEmailVerification();
+            const enteredKey = document.getElementById('registerMasterKey').value.trim();
+            if (enteredKey === masterKey) {
+                await db.collection('masters').doc(cred.user.uid).set({ email: cred.user.email });
+            }
+            verificationBlock.style.display = 'block';
+            document.getElementById('registerSubmitBtn').style.display = 'none';
+            loginError.style.display = 'none';
+        } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
+    });
+
+    resendVerifyBtn.addEventListener('click', async () => {
+        const now = Date.now();
+        if (now - lastVerifyTime < 45000) { verifyMsg.textContent = 'Подождите 45 секунд'; return; }
+        if (verifyAttempts >= 5) { verifyMsg.textContent = 'Превышено количество попыток'; return; }
+        try {
+            const user = auth.currentUser;
+            if (user) {
+                await user.sendEmailVerification();
+                lastVerifyTime = now;
+                verifyAttempts++;
+                verifyMsg.textContent = 'Письмо отправлено повторно';
+            }
+        } catch (err) { verifyMsg.textContent = 'Ошибка: ' + err.message; }
+    });
+
+    // ====== ПРОВЕРКА ПОДТВЕРЖДЕНИЯ EMAIL ======
+    document.getElementById('checkVerifiedBtn').addEventListener('click', async () => {
+        const user = auth.currentUser;
+        if (!user) return;
+        document.getElementById('verifyStatusMsg').textContent = 'Проверяем...';
+        await user.reload();
+        if (user.emailVerified) {
+            location.reload();
+        } else {
+            document.getElementById('verifyStatusMsg').textContent = 'Email ещё не подтверждён. Проверьте почту и нажмите кнопку ещё раз.';
+        }
+    });
+
+    document.getElementById('backToLoginBtn').addEventListener('click', () => {
+        auth.signOut();
+        verifyScreen.style.display = 'none';
+        loginScreen.style.display = 'flex';
+    });
+
+    // ====== ВОССТАНОВЛЕНИЕ ПАРОЛЯ ======
     let resetAttempts = 0, lastResetTime = 0;
     document.getElementById('sendResetBtn').addEventListener('click', async () => {
         const email = document.getElementById('forgotEmail').value.trim();
@@ -329,62 +456,7 @@
     });
     document.getElementById('closeForgotModal').addEventListener('click', () => forgotPasswordModal.classList.remove('active'));
 
-    // Регистрация – после создания НЕ выходим, а показываем verifyScreen
-    document.getElementById('registerSubmitBtn').addEventListener('click', async () => {
-        const email = document.getElementById('registerEmail').value.trim();
-        const password = document.getElementById('registerPassword').value.trim();
-        if (!email || !password) { loginError.textContent = 'Введите email и пароль'; loginError.style.display = 'block'; return; }
-        try {
-            const cred = await auth.createUserWithEmailAndPassword(email, password);
-            await cred.user.sendEmailVerification();
-            const enteredKey = document.getElementById('registerMasterKey').value.trim();
-            if (enteredKey === masterKey) {
-                await db.collection('masters').doc(cred.user.uid).set({ email: cred.user.email });
-            }
-            // Показываем verifyScreen, скрываем логин
-            loginScreen.style.display = 'none';
-            verifyScreen.style.display = 'flex';
-        } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
-    });
-
-    // Вход – если email не подтверждён, покажем verifyScreen
-    document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
-        if (!email || !password) { loginError.textContent = 'Введите email и пароль'; loginError.style.display = 'block'; return; }
-        try {
-            const cred = await auth.signInWithEmailAndPassword(email, password);
-            if (!cred.user.emailVerified) {
-                // показать verifyScreen
-                loginScreen.style.display = 'none';
-                verifyScreen.style.display = 'flex';
-                return;
-            }
-            // onAuthStateChanged сам подхватит
-        } catch (err) { loginError.textContent = 'Ошибка: ' + err.message; loginError.style.display = 'block'; }
-    });
-
-    // Кнопка проверки подтверждения
-    document.getElementById('checkVerifiedBtn').addEventListener('click', async () => {
-        const user = auth.currentUser;
-        if (!user) return;
-        document.getElementById('verifyStatusMsg').textContent = 'Проверяем...';
-        await user.reload();
-        if (user.emailVerified) {
-            // Перезагрузим страницу, чтобы onAuthStateChanged увидел обновлённый статус
-            location.reload();
-        } else {
-            document.getElementById('verifyStatusMsg').textContent = 'Email ещё не подтверждён. Проверьте почту и нажмите кнопку ещё раз.';
-        }
-    });
-
-    document.getElementById('backToLoginBtn').addEventListener('click', () => {
-        auth.signOut();
-        verifyScreen.style.display = 'none';
-        loginScreen.style.display = 'flex';
-    });
-
-    // Мои записи
+    // ====== МОИ ЗАПИСИ (модальное окно) ======
     myBookingsBtn.addEventListener('click', () => myBookingsModal.classList.add('active'));
     document.getElementById('findMyBookingsBtn').addEventListener('click', () => {
         const phone = document.getElementById('myBookingsPhone').value.trim();
@@ -413,7 +485,7 @@
     });
     document.getElementById('closeMyBookingsModal').addEventListener('click', () => myBookingsModal.classList.remove('active'));
 
-    // Авторизация
+    // ====== АВТОРИЗАЦИЯ ======
     async function loadMasterKey() {
         try {
             const doc = await db.collection('settings').doc('masterKey').get();
@@ -503,7 +575,7 @@
         logoutBtn.addEventListener('click', logout);
     }
 
-    // ИИ-чат
+    // ========== ИИ-ЧАТ ==========
     aiChatBtn.addEventListener('click', () => aiChatModal.classList.add('active'));
     document.getElementById('closeAiChatBtn').addEventListener('click', () => aiChatModal.classList.remove('active'));
     document.getElementById('sendChatBtn').addEventListener('click', sendChat);
