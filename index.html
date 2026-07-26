@@ -220,7 +220,7 @@
 <!-- Экран подтверждения email -->
 <div class="login-screen" id="verifyScreen" style="display:none;">
     <div class="modal-content" style="max-width:400px;">
-        <h3 style="color:#b3436e;">📧 Подтверждение email</h3>
+        <h3 style="color:#b3436e;"> Подтверждение email</h3>
         <p style="color:#4a2c3a; margin-bottom:15px;">На ваш email отправлено письмо. Подтвердите его, затем нажмите кнопку ниже.</p>
         <button class="modal-btn btn-primary" id="checkVerifiedBtn" style="width:100%;">Я подтвердил(а) почту</button>
         <p id="verifyStatusMsg" style="color:#b3436e; margin-top:10px;"></p>
@@ -242,7 +242,7 @@
                 <button type="button" id="toggleLoginPassword" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#b3436e; cursor:pointer; font-size:1.2rem;">👁️</button>
             </div>
             <button class="modal-btn btn-primary" id="loginSubmitBtn" style="width:100%;">Войти</button>
-            <a href="#" id="forgotPasswordLink" style="color:#b3436e; display:block; text-align:center; margin-top:10px; font-size:0.9rem;">Забыли пароль?</a>
+            <button type="button" class="modal-btn btn-secondary" id="forgotPasswordLink" style="width:100%; margin-top:10px;">Забыли пароль?</button>
         </div>
         <div id="registerForm" style="display:none;">
             <input type="email" id="registerEmail" placeholder="Email">
@@ -253,7 +253,7 @@
             <input type="text" id="registerMasterKey" placeholder="Ключ мастера (если есть)">
             <button class="modal-btn btn-primary" id="registerSubmitBtn" style="width:100%;">Зарегистрироваться</button>
             <div id="verificationBlock" style="display:none; margin-top:15px;">
-                <p style="color:#b3436e; margin:10px 0;">📧 Письмо для подтверждения отправлено. Проверьте почту и войдите снова.</p>
+                <p style="color:#b3436e; margin:10px 0;"> Письмо для подтверждения отправлено. Проверьте почту и войдите снова.</p>
                 <button class="modal-btn btn-secondary" id="resendVerifyBtn">Отправить ещё раз</button>
                 <p id="verifyMsg" style="color:#b3436e; margin-top:5px;"></p>
             </div>
@@ -273,10 +273,21 @@
     </div>
 </div>
 
+<div class="modal" id="confirmDeleteModal">
+    <div class="modal-content" style="max-width:350px;">
+        <h3 style="color:#b3436e;">Удалить запись?</h3>
+        <p id="confirmDeleteText" style="color:#4a2c3a; margin:15px 0;"></p>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="modal-btn btn-secondary" id="cancelDeleteBtn">Отмена</button>
+            <button class="modal-btn btn-primary" id="proceedDeleteBtn">Удалить</button>
+        </div>
+    </div>
+</div>
+
 <!-- Модальное окно "Мои записи" -->
 <div class="modal" id="myBookingsModal">
     <div class="modal-content">
-        <h3 style="color:#b3436e;">📋 Мои записи</h3>
+        <h3 style="color:#b3436e;"> Мои записи</h3>
         <input type="tel" id="myBookingsPhone" placeholder="Номер телефона">
         <button class="modal-btn btn-primary" id="findMyBookingsBtn">Показать</button>
         <div id="myBookingsResults" style="margin-top:15px; max-height:200px; overflow-y:auto;"></div>
@@ -288,16 +299,16 @@
 <div class="app-container" id="appContainer">
     <div class="calendar-wrapper" id="calendarWrapper">
         <div class="header">
-            <div class="logo">💅 Manik</div>
+            <div class="logo"> Manik</div>
             <div class="dropdown">
                 <button class="menu-btn" id="menuBtn">☰ Меню</button>
                 <div class="dropdown-content" id="dropdownMenu">
-                    <button id="archiveBtn">📂 Архив</button>
-                    <button id="myBookingsBtn">📋 Мои записи</button>
-                    <button id="aiChatBtn">🤖 ИИ консультант</button>
-                    <button id="searchWindowBtn">🔍 Поиск окна</button>
-                    <button id="blacklistBtn" style="display:none;">🚫 Чёрный список</button>
-                    <button id="logoutBtn">🚪 Выйти</button>
+                    <button id="archiveBtn"> Архив</button>
+                    <button id="myBookingsBtn"> Мои записи</button>
+                    <button id="aiChatBtn"> ИИ консультант</button>
+                    <button id="searchWindowBtn"> Поиск окна</button>
+                    <button id="blacklistBtn" style="display:none;"> Чёрный список</button>
+                    <button id="logoutBtn"> Выйти</button>
                 </div>
             </div>
         </div>
@@ -309,7 +320,7 @@
             </div>
             <div class="weekdays"><span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span></div>
             <div class="days-grid" id="daysGrid"></div>
-            <div style="background:rgba(255,240,245,0.7);border-radius:20px;padding:15px;margin:15px 0;color:#b3436e;" id="selectedDateDisplay">📅 Дата не выбрана</div>
+            <div style="background:rgba(255,240,245,0.7);border-radius:20px;padding:15px;margin:15px 0;color:#b3436e;" id="selectedDateDisplay"> Дата не выбрана</div>
             <div id="timeSelectionArea" style="display:none;">
                 <div style="font-weight:600;color:#b3436e;margin-bottom:8px;">Доступное время (2 часа):</div>
                 <div class="time-slots" id="timeSlotsContainer"></div>
@@ -342,7 +353,7 @@
 </div>
 <div class="modal" id="aiChatModal">
     <div class="modal-content" style="max-width:500px;">
-        <h3 style="color:#b3436e;">🤖 ИИ консультант по маникюру</h3>
+        <h3 style="color:#b3436e;"> ИИ консультант по маникюру</h3>
         <div class="chat-container" id="chatContainer" style="height:300px; overflow-y:auto; margin:15px 0; padding:10px; background:rgba(255,240,245,0.5); border-radius:15px;"></div>
         <input type="text" id="chatInput" placeholder="Опишите, что хотите...">
         <button class="modal-btn btn-primary" id="sendChatBtn">Спросить</button>
@@ -472,8 +483,7 @@
     setupPasswordToggle('toggleRegisterPassword', 'registerPassword');
 
     // ====== ЗАБЫЛИ ПАРОЛЬ (ссылка) ======
-    forgotPasswordLink.addEventListener('click', (e) => {
-        e.preventDefault();
+    document.getElementById('forgotPasswordLink').addEventListener('click', () => {
         forgotPasswordModal.classList.add('active');
         document.getElementById('backToLoginFromForgot').style.display = 'none';
         failedLoginAttempts = 0;
@@ -617,7 +627,7 @@
             return `<div style="background:rgba(255,240,245,0.5); padding:10px; border-radius:12px; margin-bottom:6px; color:#4a2c3a;">
                 <div style="color:#e36b8c;">${dateStr}</div>
                 <div>${app.time} – ${parseInt(app.time)+2}:00</div>
-                ${app.note ? `<div style="color:#b3436e;">📝 ${app.note}</div>` : ''}
+                ${app.note ? `<div style="color:#b3436e;"> ${app.note}</div>` : ''}
             </div>`;
         }).join('');
     });
@@ -723,7 +733,7 @@
         const msg = chatInput.value.trim();
         if (!msg || chatCooldown) return;
         if (dailyMessageCount >= 10) {
-            addChatMessage('bot', '🎀 Вы использовали лимит сообщений на сегодня (10). Возвращайтесь завтра!');
+            addChatMessage('bot', ' Вы использовали лимит сообщений на сегодня (10). Возвращайтесь завтра!');
             return;
         }
         addChatMessage('user', msg);
@@ -733,7 +743,7 @@
         sendBtn.disabled = true;
         sendBtn.style.opacity = '0.5';
         let remaining = 10;
-        sendBtn.textContent = `⏳ ${remaining}с`;
+        sendBtn.textContent = ` ${remaining}с`;
         const interval = setInterval(() => {
             remaining--;
             if (remaining <= 0) {
@@ -743,7 +753,7 @@
                 sendBtn.textContent = 'Спросить';
                 chatCooldown = false;
             } else {
-                sendBtn.textContent = `⏳ ${remaining}с`;
+                sendBtn.textContent = ` ${remaining}с`;
             }
         }, 1000);
 
@@ -760,7 +770,7 @@
             addChatMessage('bot', reply);
             dailyMessageCount++;
             localStorage.setItem('dailyMsgCount', dailyMessageCount.toString());
-            if (dailyMessageCount >= 10) addChatMessage('bot', '🎀 Дневной лимит исчерпан. До завтра!');
+            if (dailyMessageCount >= 10) addChatMessage('bot', ' Дневной лимит исчерпан. До завтра!');
         })
         .catch(err => addChatMessage('bot', 'Ошибка: ' + err.message));
     }
@@ -843,18 +853,18 @@
 
     function updateUIForSelectedDate() {
         if (!selectedDate || multiSelectMode) {
-            selectedDateDisplay.innerHTML = '📅 Дата не выбрана';
+            selectedDateDisplay.innerHTML = ' Дата не выбрана';
             timeSelectionArea.style.display = 'none';
             bookingFormArea.style.display = 'none';
             return;
         }
         const dk = formatDateKey(selectedDate);
-        selectedDateDisplay.innerHTML = `📅 ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}`;
+        selectedDateDisplay.innerHTML = ` ${selectedDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})}`;
         timeSelectionArea.innerHTML = '<div style="font-weight:600;color:#b3436e;margin-bottom:5px;">Доступное время (2 часа):</div><div class="time-slots" id="timeSlotsContainer"></div>';
         timeSlotsContainer = document.getElementById('timeSlotsContainer');
         timeSelectionArea.style.display = 'block';
         if (isDateInPast(selectedDate)) {
-            timeSelectionArea.innerHTML = '<div style="color:#b3436e;text-align:center;">⛔ Запись только с завтрашнего дня</div>';
+            timeSelectionArea.innerHTML = '<div style="color:#b3436e;text-align:center;"> Запись только с завтрашнего дня</div>';
             bookingFormArea.style.display = 'none';
             return;
         }
@@ -874,6 +884,29 @@
             if (selectedTime===time && !isB && !past) cls+=' selected-time';
             slotsHtml += `<div class="${cls}" data-time="${time}">${time}<small> до ${end}</small></div>`;
         });
+        if (isAdmin) {
+        document.querySelectorAll('.time-slot.booked').forEach(slot => {
+            slot.addEventListener('click', function() {
+                const time = this.dataset.time;
+                const dk = formatDateKey(selectedDate);
+                const apps = appointments[dk] || [];
+                const app = apps.find(a => a.time === time);
+                if (app) {
+                    document.getElementById('confirmDeleteText').textContent =
+                        `${selectedDate.toLocaleDateString('ru-RU', {day:'numeric',month:'long',weekday:'short'})} ${time}-${parseInt(time)+2}:00, ${app.name}, ${app.phone}`;
+                    document.getElementById('confirmDeleteModal').classList.add('active');
+                    document.getElementById('proceedDeleteBtn').onclick = async () => {
+                        await db.collection('appointments').doc(app.docId).delete();
+                        document.getElementById('confirmDeleteModal').classList.remove('active');
+                        updateUIForSelectedDate();
+                    };
+                    document.getElementById('cancelDeleteBtn').onclick = () => {
+                        document.getElementById('confirmDeleteModal').classList.remove('active');
+                    };
+                }
+            });
+        });
+    }
         timeSlotsContainer.innerHTML = slotsHtml;
         if (selectedTime && (booked.includes(selectedTime) || isPastSlot(selectedDate,selectedTime))) selectedTime=null;
         bookingFormArea.style.display = selectedTime ? 'flex' : 'none';
@@ -975,7 +1008,7 @@
             clientNameInput.value=''; clientPhoneInput.value=''; clientNoteInput.value='';
             designFileInput.value=''; selectedTime=null;
             updateUIForSelectedDate();
-            showMessage('✅ Вы записаны!');
+            showMessage(' Вы записаны!');
         } catch(e) { showMessage('Ошибка: '+e.message); }
     });
 
@@ -996,7 +1029,7 @@
     const archiveModal = document.createElement('div'); archiveModal.className = 'modal'; archiveModal.id = 'archiveModal';
     archiveModal.innerHTML = `
         <div class="modal-content" style="max-width:850px;">
-            <h3 style="color:#b3436e;">📂 Архив записей</h3>
+            <h3 style="color:#b3436e;"> Архив записей</h3>
             <div class="archive-container" style="display:flex; gap:20px; max-height:70vh;">
                 <div class="archive-years-panel" style="width:90px; background:rgba(255,240,245,0.5); border-radius:20px; padding:15px; overflow-y:auto; flex-shrink:0;" id="archiveYears"></div>
                 <div style="flex:1; overflow-y:auto;" id="archiveMain">
@@ -1086,7 +1119,7 @@
                 apps.forEach(app => {
                     list += `<div style="background:rgba(255,240,245,0.7); padding:10px; border-radius:12px; margin-bottom:6px; color:#4a2c3a;">
                         <div><strong>${app.time}-${parseInt(app.time)+2}:00</strong> — ${app.name} (${app.phone})</div>
-                        ${app.note ? `<div style="color:#b3436e;">📝 ${app.note}</div>` : ''}
+                        ${app.note ? `<div style="color:#b3436e;"> ${app.note}</div>` : ''}
                         ${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#e36b8c;">📎 Дизайн</a>` : ''}</div>`;
                 });
                 detailDiv.innerHTML = list;
@@ -1111,14 +1144,14 @@
         const modal = document.createElement('div'); modal.className = 'modal active';
         modal.innerHTML = `
             <div class="modal-content" style="max-width:500px;">
-                <h3 style="color:#b3436e;">🔍 Найти свободное окно</h3>
-                <label style="color:#4a2c3a;">📅 С какой даты искать</label>
+                <h3 style="color:#b3436e;"> Найти свободное окно</h3>
+                <label style="color:#4a2c3a;"> С какой даты искать</label>
                 <input type="date" id="searchFrom">
-                <label style="color:#4a2c3a;">📅 До какой даты (необязательно)</label>
+                <label style="color:#4a2c3a;"> До какой даты (необязательно)</label>
                 <input type="date" id="searchTo">
-                <label style="color:#4a2c3a;">⏰ Желаемое время (можно выбрать несколько)</label>
+                <label style="color:#4a2c3a;"> Желаемое время (можно выбрать несколько)</label>
                 <div class="time-dropdown" id="timeDropdown" style="position:relative; margin-bottom:15px;">
-                    <button class="time-dropdown-btn" id="timeDropdownBtn" style="width:100%; padding:12px; background:rgba(255,240,245,0.5); border:1px solid #f0d3e0; border-radius:20px; color:#4a2c3a; text-align:left; cursor:pointer;">👆 Выберите время</button>
+                    <button class="time-dropdown-btn" id="timeDropdownBtn" style="width:100%; padding:12px; background:rgba(255,240,245,0.5); border:1px solid #f0d3e0; border-radius:20px; color:#4a2c3a; text-align:left; cursor:pointer;"> Выберите время</button>
                     <div class="time-dropdown-options" id="timeDropdownOptions" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border-radius:15px; margin-top:5px; padding:10px; z-index:10; border:1px solid #f0d3e0; max-height:200px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
                         ${allTimeSlots.map(t => `
                             <label style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; cursor:pointer; color:#4a2c3a; transition:0.2s;"
@@ -1142,7 +1175,7 @@
         document.addEventListener('click', (e) => { if (!modal.querySelector('.time-dropdown').contains(e.target)) timeDropdownOptions.style.display = 'none'; });
         timeDropdownOptions.addEventListener('change', () => {
             const checked = Array.from(timeDropdownOptions.querySelectorAll('input:checked')).map(cb => cb.value);
-            timeDropdownBtn.innerHTML = checked.length ? `✅ Выбрано: ${checked.join(', ')}` : '👆 Выберите время';
+            timeDropdownBtn.innerHTML = checked.length ? ` Выбрано: ${checked.join(', ')}` : ' Выберите время';
         });
 
         modal.querySelector('#doSearch').addEventListener('click', ()=>{
@@ -1172,7 +1205,7 @@
                 return `<div style="background:rgba(255,240,245,0.5); padding:12px 15px; border-radius:12px; margin-bottom:8px; border-left:3px solid #e36b8c; color:#4a2c3a; display:flex; justify-content:space-between; align-items:center;">
                     <div><div style="color:#e36b8c; font-weight:600;">${d}</div><div style="font-size:0.95rem; margin-top:3px;">${r.time} – ${parseInt(r.time)+2}:00</div></div>
                     <span style="color:#e36b8c; font-size:1.2rem;">✓</span></div>`;
-            }).join('') : '<div style="color:#b3436e; text-align:center; padding:20px;">😔 Свободных окон не найдено</div>';
+            }).join('') : '<div style="color:#b3436e; text-align:center; padding:20px;"> Свободных окон не найдено</div>';
         });
         modal.querySelector('#closeSearch').addEventListener('click', ()=> modal.remove());
     });
@@ -1208,14 +1241,16 @@
         Object.keys(appointments).sort().forEach(dateKey => {
             const [y,m,d] = dateKey.split('-').map(Number);
             const date = new Date(y,m-1,d);
-            if (date >= now) appointments[dateKey].forEach(app => allBookings.push({...app, date, dateKey}));
+            const today = new Date(); today.setHours(0,0,0,0);
+            const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+            if (date >= today && date <= tomorrow) appointments[dateKey].forEach(app => allBookings.push({...app, date, dateKey}));
         });
         if (!allBookings.length) { bookingsContainer.innerHTML = '<div style="color:#b3436e;text-align:center;padding:30px;">Нет будущих записей</div>'; return; }
         let html = '';
         allBookings.sort((a,b)=>a.date - b.date).forEach(app => {
             const dateStr = app.date.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
             html += `<div style="background:rgba(255,240,245,0.5);padding:15px;border-radius:15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid #e36b8c;">
-                <div><div style="color:#e36b8c;font-weight:600;">${dateStr}</div><div style="color:#4a2c3a;"><span style="background:rgba(255,126,179,0.2);padding:2px 10px;border-radius:10px;">${app.time} – ${parseInt(app.time)+2}:00</span></div><div style="margin-top:8px;color:#4a2c3a;">👤 ${app.name} <span style="color:#b3436e;margin-left:10px;">📱 ${app.phone}</span></div>${app.note ? `<div style="color:#b3436e;margin-top:5px;font-style:italic;">📝 ${app.note}</div>` : ''}${app.designUrl ? `<a href="${app.designUrl}" target="_blank" style="color:#e36b8c;">📎 Дизайн</a>` : ''}</div>
+                <div><div style="color:#e36b8c;font-weight:600;">${dateStr}</div><div style="color:#4a2c3a;"><span style="background:rgba(255,126,179,0.2);padding:2px 10px;border-radius:10px;">${app.time} – ${parseInt(app.time)+2}:00</span></div><div style="margin-top:8px;color:#4a2c3a;"> ${app.name} <span style="color:#b3436e;margin-left:10px;"> ${app.phone}</span></div></div>
                 <button class="delete-btn" data-docid="${app.docId}" style="background:#e74c3c;color:white;border:none;border-radius:50%;width:35px;height:35px;font-size:1.2rem;cursor:pointer;">✕</button>
             </div>`;
         });
